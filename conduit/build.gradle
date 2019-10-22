@@ -1,0 +1,21 @@
+plugins {
+    id 'io.vertx.vertx-plugin' version '0.5.0'
+}
+
+repositories {
+    jcenter()
+}
+
+vertx {
+    mainVerticle = 'App'
+    jvmArgs = ["-Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.Log4j2LogDelegateFactory"]
+    debugSuspend = true
+    debugPort = 5005
+}
+
+dependencies{
+    compile group: 'io.vertx', name: 'vertx-config'
+    compile group: 'io.vertx', name: 'vertx-web'
+    compile project (':common')
+}
+

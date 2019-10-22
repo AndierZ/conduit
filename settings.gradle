@@ -1,0 +1,3 @@
+rootProject.name = 'vertx-examples'
+
+include ":common", ":conduit"

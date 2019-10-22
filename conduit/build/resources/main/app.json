@@ -1,0 +1,5 @@
+{
+  "env": "test",
+  "db.name": "conduit_test",
+  "connection_string": "mongodb://localhost:27017"
+}
