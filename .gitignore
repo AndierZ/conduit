@@ -31,3 +31,6 @@ build/
 
 # intellij project file
 .idea/workspace.xml
+
+# generated code
+conduit/src/main/generated
