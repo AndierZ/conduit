@@ -8,7 +8,12 @@ import java.util.List;
 @DataObject(generateConverter = true)
 public class User extends Base {
 
-    public User(JsonObject jsonObject) {}
+    public User(JsonObject jsonObject) {
+        // TODO validate json object. ensure correct format for certain fields (email)
+        // TODO how to enforce uniqueness based on username or id in the database?
+        fromBaseJson(jsonObject, this);
+        UserConverter.fromJson(jsonObject, this);
+    }
 
     public String getUsername() {
         return username;
@@ -18,7 +23,7 @@ public class User extends Base {
 
     String email;
 
-    String password;
+    String passwordHash;
 
     String salt;
 
@@ -44,12 +49,12 @@ public class User extends Base {
         this.email = email;
     }
 
-    public String getPassword() {
-        return password;
+    public String getPasswordHash() {
+        return passwordHash;
     }
 
-    public void setPassword(String password) {
-        this.password = password;
+    public void setPasswordHash(String passwordHash) {
+        this.passwordHash = passwordHash;
     }
 
     public String getSalt() {

@@ -3,21 +3,25 @@ package io.vertx.conduit.dto;
 import io.vertx.conduit.models.User;
 import io.vertx.core.json.JsonObject;
 import org.bson.types.ObjectId;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 
 public class UserDTO {
 
     private final User user;
 
-    public UserDTO(User user) {
-        this.user = user;
+    public UserDTO(JsonObject obj) {
+        this.user = new User(obj);
     }
 
     public void setPassword(String password) {
-
+        String salt = BCrypt.gensalt();
+        String passwordHash = BCrypt.hashpw(password, salt);
+        this.user.setSalt(salt);
+        this.user.setPasswordHash(passwordHash);
     }
 
     public boolean validatePassword(String password) {
-        return false;
+        return BCrypt.checkpw(password, this.user.getSalt());
     }
 
     public String generateJwt() {

@@ -1,9 +1,11 @@
 plugins {
     id 'io.vertx.vertx-plugin' version '0.5.0'
+
 }
 
 repositories {
     jcenter()
+    mavenCentral()
 }
 
 vertx {
@@ -17,6 +19,7 @@ dependencies{
     compile group: 'io.vertx', name: 'vertx-config'
     compile group: 'io.vertx', name: 'vertx-web'
     compile group: 'io.vertx', name: 'vertx-mongo-client'
+    compile group: 'org.springframework.security', name: 'spring-security-crypto', version: '3.1.0.RELEASE'
     compileOnly group: 'io.vertx', name: 'vertx-codegen'
     compile project (':common')
 }
