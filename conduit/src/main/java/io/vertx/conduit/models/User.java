@@ -30,6 +30,8 @@ public class User extends Base {
 
     List<User> following;
 
+    List<Article> favorites;
+
     public void setUsername(String username) {
         this.username = username;
     }
@@ -82,11 +84,4 @@ public class User extends Base {
         this.image = image;
     }
 
-    public List<User> getFollowing() {
-        return following;
-    }
-
-    public void setFollowing(List<User> following) {
-        this.following = following;
-    }
 }
