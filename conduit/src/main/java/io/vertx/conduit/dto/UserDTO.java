@@ -16,12 +16,11 @@ public class UserDTO {
     public void setPassword(String password) {
         String salt = BCrypt.gensalt();
         String passwordHash = BCrypt.hashpw(password, salt);
-        this.user.setSalt(salt);
         this.user.setPasswordHash(passwordHash);
     }
 
     public boolean validatePassword(String password) {
-        return BCrypt.checkpw(password, this.user.getSalt());
+        return BCrypt.checkpw(password, this.user.getPasswordHash());
     }
 
     public String generateJwt() {
@@ -51,5 +50,4 @@ public class UserDTO {
     public void unfollow(User user) {
 
     }
-
 }

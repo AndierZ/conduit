@@ -25,8 +25,6 @@ public class User extends Base {
 
     String passwordHash;
 
-    String salt;
-
     String token;
 
     String bio;
@@ -55,14 +53,6 @@ public class User extends Base {
 
     public void setPasswordHash(String passwordHash) {
         this.passwordHash = passwordHash;
-    }
-
-    public String getSalt() {
-        return salt;
-    }
-
-    public void setSalt(String salt) {
-        this.salt = salt;
     }
 
     public String getToken() {
