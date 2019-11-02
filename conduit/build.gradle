@@ -27,10 +27,16 @@ dependencies{
     compile project (':common')
 }
 
+def generated_dir = 'src/main/generated'
+
+task cleanGenerate(type: Delete, group: 'build') {
+    delete project.file(generated_dir)
+}
+
 task generate(type: JavaCompile, group: 'build') {
     source = sourceSets.main.java
     classpath = configurations.compile + configurations.compileOnly
-    destinationDir = project.file('src/main/generated')
+    destinationDir = project.file(generated_dir)
     options.annotationProcessorPath = configurations.compile + configurations.compileOnly
     options.compilerArgs = [
             "-proc:only",
@@ -42,7 +48,7 @@ task generate(type: JavaCompile, group: 'build') {
 sourceSets {
     main {
         java {
-            srcDirs += 'src/main/generated'
+            srcDirs += generated_dir
         }
     }
 }

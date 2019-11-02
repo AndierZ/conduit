@@ -14,11 +14,7 @@ public interface UserService {
         return new UserServiceImpl(vertx);
     }
 
-    static UserService createProxy(Vertx vertx,
-                                           String address) {
-        return new UserServiceVertxEBProxy(vertx, address);
-    }
-
-
     void register(JsonObject message, Handler<AsyncResult<JsonObject>> resultHandler);
+
+    void get(String id, Handler<AsyncResult<JsonObject>> resultHandler);
 }

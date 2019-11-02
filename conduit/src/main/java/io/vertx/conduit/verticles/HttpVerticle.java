@@ -29,6 +29,7 @@ public class HttpVerticle extends AbstractVerticle {
 
         apiRouter.route().handler(BodyHandler.create());
         apiRouter.route(HttpMethod.POST, "/users").produces("application/json").handler(new UserHandlers.RegistrationHandler(vertx));
+        apiRouter.route(HttpMethod.GET, "/user").produces("application/json").handler(new UserHandlers.GetHandler(vertx));
 
         baseRouter.mountSubRouter("/api", apiRouter);
 

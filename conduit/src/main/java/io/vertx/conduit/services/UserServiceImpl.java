@@ -12,21 +12,26 @@ import io.vertx.ext.auth.jwt.JWTOptions;
 import org.bson.types.ObjectId;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
+import java.util.Date;
+
+
 public class UserServiceImpl implements UserService {
 
     private static final Logger LOGGER = ContextLogger.create();
 
+    private static int userIdCounter;
+
     // active user being processed
     private final User user;
-    private final JsonObject json;
-    private final Vertx vertx;
+    private final JsonObject claimJson;
+    private final JsonObject retJson;
 
     private JWTAuth jwtAuth;
 
     public UserServiceImpl(Vertx vertx) {
-        this.vertx = vertx;
         this.user = new User();
-        this.json = new JsonObject();
+        this.claimJson = new JsonObject();
+        this.retJson = new JsonObject();
 
         this.jwtAuth = JWTAuth.create(vertx, new JWTAuthOptions().addPubSecKey(
                 new PubSecKeyOptions()
@@ -37,47 +42,56 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void register(JsonObject message, Handler<AsyncResult<JsonObject>> resultHandler) {
-        message.put("ack", "true");
-        resultHandler.handle(Future.succeededFuture(message));
+        user.fromJson(message);
+        user.set_id(new ObjectId(new Date(), userIdCounter++));
+
+        retJson.clear();
+        toAuthJson(user, retJson);
+
+        resultHandler.handle(Future.succeededFuture(retJson));
     }
 
-    private void setPassword(String password) {
+    @Override
+    public void get(String id, Handler<AsyncResult<JsonObject>> resultHandler) {
+        retJson.clear();
+        retJson.put("ack", true);
+        resultHandler.handle(Future.succeededFuture(retJson));
+    }
+
+    private void setPassword(User user, String password) {
         String salt = BCrypt.gensalt();
         String passwordHash = BCrypt.hashpw(password, salt);
-        this.user.setPasswordHash(passwordHash);
+        user.setPasswordHash(passwordHash);
     }
 
-    private boolean validatePassword(String password) {
-        return BCrypt.checkpw(password, this.user.getPasswordHash());
+    private boolean validatePassword(User user, String password) {
+        return BCrypt.checkpw(password, user.getPasswordHash());
     }
 
-    private String generateJwt() {
-        return jwtAuth.generateToken(generatePrincipal(user), new JWTOptions().setExpiresInMinutes(60));
+    private String generateJwt(User user) {
+        claimJson.clear();
+        claimJson.put("_id", user.get_id().toHexString());
+        claimJson.put("username", user.getUsername());
+
+        return jwtAuth.generateToken(claimJson, new JWTOptions().setExpiresInMinutes(60));
     }
 
-    private JsonObject generatePrincipal(User user) {
-        json.clear();
-        json.put("_id", user.get_id());
-        json.put("username", user.getUsername());
-        return json;
-    }
-
-    private JsonObject toAuthJson() {
-        json.clear();
+    private JsonObject toAuthJson(User user, JsonObject retJson) {
         if (user.getBio() != null) {
-            json.put("bio", user.getBio());
+            retJson.put("bio", user.getBio());
         }
         if (user.getEmail() != null) {
-            json.put("email", user.getEmail());
+            retJson.put("email", user.getEmail());
         }
         if (user.getImage() != null) {
-            json.put("image", user.getImage());
+            retJson.put("image", user.getImage());
         }
         if (user.getUsername() != null) {
-            json.put("username", user.getUsername());
+            retJson.put("username", user.getUsername());
         }
-        json.put("jwt", generateJwt());
-        return json;
+        retJson.put("token", generateJwt(user));
+
+        return retJson;
     }
 
     private JsonObject toJsonFor(User user) {

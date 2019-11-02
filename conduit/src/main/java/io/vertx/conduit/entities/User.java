@@ -85,4 +85,9 @@ public class User extends Base {
         this.image = image;
     }
 
+    public JsonObject toJson(JsonObject json) {
+        toBaseJson(this, json);
+        UserConverter.toJson(this, json);
+        return json;
+    }
 }
