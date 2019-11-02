@@ -1,7 +1,7 @@
-package io.vertx.conduit.models;
+package io.vertx.conduit.entities;
 
-import org.bson.types.ObjectId;
 import io.vertx.core.json.JsonObject;
+import org.bson.types.ObjectId;
 
 import java.io.Serializable;
 import java.util.Date;

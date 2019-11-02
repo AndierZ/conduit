@@ -1,8 +1,13 @@
+package io.vertx.conduit;
+
 import LoggingUtils.ContextLogger;
+import io.vertx.conduit.verticles.HttpVerticle;
+import io.vertx.conduit.verticles.UserServiceVerticle;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.CompositeFuture;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
@@ -19,7 +24,9 @@ public class App extends AbstractVerticle {
             if (ar1.succeeded()) {
                 LOGGER.info("Config successfully retrived: " + ar1.result().toString());
                 DeploymentOptions deploymentOptions = new DeploymentOptions().setConfig(ar1.result());
-                deployVerticle(HttpVerticle.class, deploymentOptions)
+                CompositeFuture.all(
+                    deployVerticle(HttpVerticle.class, deploymentOptions),
+                    deployVerticle(UserServiceVerticle.class, deploymentOptions))
                 .setHandler(ar2 -> {
                     if (ar2.succeeded()) {
                         LOGGER.info("Successfully deployed verticals.");

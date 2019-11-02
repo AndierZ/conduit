@@ -1,4 +1,4 @@
-package io.vertx.conduit.models;
+package io.vertx.conduit.entities;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
@@ -8,7 +8,13 @@ import java.util.List;
 @DataObject(generateConverter = true)
 public class User extends Base {
 
-    public User(JsonObject jsonObject) {
+    public User() {}
+
+    public User(JsonObject json) {
+
+    }
+
+    public void fromJson(JsonObject jsonObject) {
         // TODO validate json object. ensure correct format for certain fields (email)
         // TODO how to enforce uniqueness based on username or id in the database?
         fromBaseJson(jsonObject, this);

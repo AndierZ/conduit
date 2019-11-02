@@ -1,9 +1,14 @@
+package io.vertx.conduit.verticles;
+
 import LoggingUtils.ContextLogger;
+import io.vertx.conduit.handlers.UserHandlers;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.logging.Logger;
 import io.vertx.ext.web.Router;
+import io.vertx.ext.web.handler.BodyHandler;
 
 public class HttpVerticle extends AbstractVerticle {
 
@@ -20,6 +25,13 @@ public class HttpVerticle extends AbstractVerticle {
             response.putHeader("content-type", "text/plain").end("Hello Vert.x!");
         });
 
+        Router apiRouter = Router.router(vertx);
+
+        apiRouter.route().handler(BodyHandler.create());
+        apiRouter.route(HttpMethod.POST, "/users").produces("application/json").handler(new UserHandlers.RegistrationHandler(vertx));
+
+        baseRouter.mountSubRouter("/api", apiRouter);
+
         vertx.createHttpServer()
                 .requestHandler(baseRouter)
                 .listen(3000, ar -> {
@@ -30,10 +42,4 @@ public class HttpVerticle extends AbstractVerticle {
                     }
                 });
     }
-
-    public static void main(String[] args) throws Exception {
-        HttpVerticle v = new HttpVerticle();
-        v.start(null);
-    }
-
 }
