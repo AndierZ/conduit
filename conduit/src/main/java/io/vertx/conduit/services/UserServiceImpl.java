@@ -2,13 +2,12 @@ package io.vertx.conduit.services;
 
 import LoggingUtils.ContextLogger;
 import io.vertx.conduit.entities.User;
-import io.vertx.core.*;
+import io.vertx.core.AsyncResult;
+import io.vertx.core.Future;
+import io.vertx.core.Handler;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
-import io.vertx.ext.auth.PubSecKeyOptions;
-import io.vertx.ext.auth.jwt.JWTAuth;
-import io.vertx.ext.auth.jwt.JWTAuthOptions;
-import io.vertx.ext.auth.jwt.JWTOptions;
 import org.bson.types.ObjectId;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 
@@ -23,21 +22,11 @@ public class UserServiceImpl implements UserService {
 
     // active user being processed
     private final User user;
-    private final JsonObject claimJson;
     private final JsonObject retJson;
-
-    private JWTAuth jwtAuth;
 
     public UserServiceImpl(Vertx vertx) {
         this.user = new User();
-        this.claimJson = new JsonObject();
         this.retJson = new JsonObject();
-
-        this.jwtAuth = JWTAuth.create(vertx, new JWTAuthOptions().addPubSecKey(
-                new PubSecKeyOptions()
-                        .setAlgorithm("HS256")
-                        .setPublicKey("vertxuserservice11258")
-                        .setSymmetric(true)));
     }
 
     @Override
@@ -68,13 +57,7 @@ public class UserServiceImpl implements UserService {
         return BCrypt.checkpw(password, user.getPasswordHash());
     }
 
-    private String generateJwt(User user) {
-        claimJson.clear();
-        claimJson.put("_id", user.get_id().toHexString());
-        claimJson.put("username", user.getUsername());
 
-        return jwtAuth.generateToken(claimJson, new JWTOptions().setExpiresInMinutes(60));
-    }
 
     private JsonObject toAuthJson(User user, JsonObject retJson) {
         if (user.getBio() != null) {
@@ -89,7 +72,6 @@ public class UserServiceImpl implements UserService {
         if (user.getUsername() != null) {
             retJson.put("username", user.getUsername());
         }
-        retJson.put("token", generateJwt(user));
 
         return retJson;
     }

@@ -7,12 +7,25 @@ import io.vertx.core.Future;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerResponse;
 import io.vertx.core.logging.Logger;
+import io.vertx.ext.auth.PubSecKeyOptions;
+import io.vertx.ext.auth.jwt.JWTAuth;
+import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
+import io.vertx.ext.web.handler.JWTAuthHandler;
 
 public class HttpVerticle extends AbstractVerticle {
 
     private static Logger LOGGER = ContextLogger.create();
+    private final JWTAuth jwtAuth;
+
+    public HttpVerticle() {
+        this.jwtAuth = JWTAuth.create(vertx, new JWTAuthOptions().addPubSecKey(
+                new PubSecKeyOptions()
+                        .setAlgorithm("HS256")
+                        .setPublicKey("vertxuserservice11258")
+                        .setSymmetric(true)));
+    }
 
     @Override
     public void start(Future<Void> startFuture) {
@@ -26,11 +39,12 @@ public class HttpVerticle extends AbstractVerticle {
         });
 
         Router apiRouter = Router.router(vertx);
-        UserHandler userHandler = new UserHandler(vertx);
+        UserHandler userHandler = new UserHandler(vertx, jwtAuth);
+
 
         apiRouter.route().handler(BodyHandler.create());
         apiRouter.route(HttpMethod.POST, "/users").produces("application/json").handler(userHandler::register);
-        apiRouter.route(HttpMethod.GET, "/user").produces("application/json").handler(userHandler::get);
+        apiRouter.route(HttpMethod.GET, "/user").produces("application/json").handler(JWTAuthHandler.create(jwtAuth)).handler(userHandler::get);
 
         baseRouter.mountSubRouter("/api", apiRouter);
 
