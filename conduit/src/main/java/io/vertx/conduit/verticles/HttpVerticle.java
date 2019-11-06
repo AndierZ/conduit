@@ -1,7 +1,7 @@
 package io.vertx.conduit.verticles;
 
 import LoggingUtils.ContextLogger;
-import io.vertx.conduit.handlers.UserHandlers;
+import io.vertx.conduit.handlers.UserHandler;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpMethod;
@@ -26,10 +26,11 @@ public class HttpVerticle extends AbstractVerticle {
         });
 
         Router apiRouter = Router.router(vertx);
+        UserHandler userHandler = new UserHandler(vertx);
 
         apiRouter.route().handler(BodyHandler.create());
-        apiRouter.route(HttpMethod.POST, "/users").produces("application/json").handler(new UserHandlers.RegistrationHandler(vertx));
-        apiRouter.route(HttpMethod.GET, "/user").produces("application/json").handler(new UserHandlers.GetHandler(vertx));
+        apiRouter.route(HttpMethod.POST, "/users").produces("application/json").handler(userHandler::register);
+        apiRouter.route(HttpMethod.GET, "/user").produces("application/json").handler(userHandler::get);
 
         baseRouter.mountSubRouter("/api", apiRouter);
 
