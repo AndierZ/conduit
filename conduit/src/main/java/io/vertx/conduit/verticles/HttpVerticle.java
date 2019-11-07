@@ -6,6 +6,7 @@ import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.ext.auth.PubSecKeyOptions;
 import io.vertx.ext.auth.jwt.JWTAuth;
@@ -17,19 +18,19 @@ import io.vertx.ext.web.handler.JWTAuthHandler;
 public class HttpVerticle extends AbstractVerticle {
 
     private static Logger LOGGER = ContextLogger.create();
-    private final JWTAuth jwtAuth;
-
-    public HttpVerticle() {
-        this.jwtAuth = JWTAuth.create(vertx, new JWTAuthOptions().addPubSecKey(
-                new PubSecKeyOptions()
-                        .setAlgorithm("HS256")
-                        .setPublicKey("vertxuserservice11258")
-                        .setSymmetric(true)));
-    }
+    private JWTAuth jwtAuth;
 
     @Override
     public void start(Future<Void> startFuture) {
         LOGGER.info("Starting Http Verticle with config {}", "test");
+
+        JsonObject config = config();
+
+        this.jwtAuth = JWTAuth.create(vertx, new JWTAuthOptions().addPubSecKey(
+                new PubSecKeyOptions()
+                        .setAlgorithm("HS256")
+                        .setPublicKey(config.getString("secret"))
+                        .setSymmetric(true)));
 
         Router baseRouter = Router.router(vertx);
 

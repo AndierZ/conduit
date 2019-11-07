@@ -28,6 +28,8 @@ hs_err_pid*
 
 # build files
 build/
+common/buid/
+conduit/build/
 
 # intellij project file
 .idea/workspace.xml
