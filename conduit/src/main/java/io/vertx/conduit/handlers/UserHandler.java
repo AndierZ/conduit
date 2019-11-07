@@ -53,7 +53,7 @@ public class UserHandler extends BaseHandler {
         claimJson.put("_id", user.getString("_id"));
         claimJson.put("username", user.getString("username"));
 
-        user.put("token", jwtAuth.generateToken(claimJson, new JWTOptions().setExpiresInMinutes(60)));
+        user.put("Bearer", jwtAuth.generateToken(claimJson, new JWTOptions().setExpiresInMinutes(60)));
     }
 
     public void get(RoutingContext event) {
