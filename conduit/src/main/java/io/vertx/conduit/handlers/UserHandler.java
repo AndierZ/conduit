@@ -1,9 +1,11 @@
 package io.vertx.conduit.handlers;
 
 import LoggingUtils.ContextLogger;
+import annotation.RouteConfig;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.conduit.services.UserService;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -12,6 +14,7 @@ import io.vertx.ext.auth.jwt.JWTOptions;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
 
+@RouteConfig(path="/api", produces = "application/json")
 public class UserHandler extends BaseHandler {
 
     private static Logger LOGGER = ContextLogger.create();
@@ -28,6 +31,7 @@ public class UserHandler extends BaseHandler {
         this.claimJson = new JsonObject();
     }
 
+    @RouteConfig(path="/users", method= HttpMethod.POST, authRequired = false)
     public void register(RoutingContext event) {
 
         JsonObject message = event.getBodyAsJson().getJsonObject("user");
@@ -39,7 +43,6 @@ public class UserHandler extends BaseHandler {
 
                 event.response()
                         .setStatusCode(HttpResponseStatus.CREATED.code())
-                        .putHeader("Content-Type", "application/json; charset=utf-8")
                         .end(Json.encodePrettily(userAuthJson));
 
             } else {
@@ -56,6 +59,7 @@ public class UserHandler extends BaseHandler {
         user.put("Bearer", jwtAuth.generateToken(claimJson, new JWTOptions().setExpiresInMinutes(60)));
     }
 
+    @RouteConfig(path="/user")
     public void get(RoutingContext event) {
 
         JsonObject message = event.getBodyAsJson().getJsonObject("user");
@@ -66,7 +70,6 @@ public class UserHandler extends BaseHandler {
 
                 event.response()
                         .setStatusCode(HttpResponseStatus.CREATED.code())
-                        .putHeader("Content-Type", "application/json; charset=utf-8")
                         .end(Json.encodePrettily(userAuthJson));
 
             } else {
