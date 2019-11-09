@@ -1,6 +1,6 @@
 package io.vertx.conduit.services;
 
-import LoggingUtils.ContextLogger;
+import logging.ContextLogger;
 import io.vertx.conduit.entities.User;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;

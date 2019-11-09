@@ -1,4 +1,4 @@
-package LoggingUtils;
+package logging;
 
 import io.vertx.core.logging.Logger;
 import io.vertx.core.logging.LoggerFactory;

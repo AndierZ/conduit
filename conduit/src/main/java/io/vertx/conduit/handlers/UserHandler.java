@@ -1,7 +1,7 @@
 package io.vertx.conduit.handlers;
 
-import LoggingUtils.ContextLogger;
-import annotation.RouteConfig;
+import logging.ContextLogger;
+import routerutils.RouteConfig;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.conduit.services.UserService;
 import io.vertx.core.Vertx;
@@ -13,6 +13,7 @@ import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTOptions;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
+import routerutils.BaseHandler;
 
 @RouteConfig(path="/api", produces = "application/json")
 public class UserHandler extends BaseHandler {

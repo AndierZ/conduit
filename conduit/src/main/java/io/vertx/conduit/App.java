@@ -1,6 +1,6 @@
 package io.vertx.conduit;
 
-import LoggingUtils.ContextLogger;
+import logging.ContextLogger;
 import io.vertx.conduit.verticles.HttpVerticle;
 import io.vertx.conduit.verticles.UserServiceVerticle;
 import io.vertx.config.ConfigRetriever;

@@ -1,4 +1,4 @@
-package annotation;
+package routerutils;
 
 import io.vertx.core.http.HttpMethod;
 
