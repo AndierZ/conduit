@@ -13,7 +13,6 @@ public class User extends Base {
 
     public User(JsonObject json) {
         fromJson(json);
-        setPassword(json.getString("password"));
     }
 
     String username;
@@ -84,7 +83,7 @@ public class User extends Base {
     }
 
 
-    private void fromJson(JsonObject jsonObject) {
+    public void fromJson(JsonObject jsonObject) {
         // TODO validate json object. ensure correct format for certain fields (email)
         // TODO how to enforce uniqueness based on username or id in the database?
         fromBaseJson(jsonObject, this);
@@ -101,12 +100,9 @@ public class User extends Base {
         setPasswordHash(passwordHash);
     }
 
-    public boolean validatePassword(String password) {
-        return BCrypt.checkpw(password, getPasswordHash());
-    }
-
     public JsonObject toAuthJson() {
         JsonObject retJson = new JsonObject();
+        retJson.put("id", getId() != null ? getId().toHexString() : null);
         retJson.put("bio", bio);
         retJson.put("email", email);
         retJson.put("image", image);
@@ -114,4 +110,5 @@ public class User extends Base {
 
         return retJson;
     }
+
 }

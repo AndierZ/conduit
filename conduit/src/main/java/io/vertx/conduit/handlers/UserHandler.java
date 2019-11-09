@@ -1,7 +1,9 @@
 package io.vertx.conduit.handlers;
 
 import io.vertx.conduit.entities.User;
+import io.vertx.core.AsyncResult;
 import logging.ContextLogger;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import routerutils.RouteConfig;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.conduit.services.UserService;
@@ -20,6 +22,7 @@ import routerutils.BaseHandler;
 public class UserHandler extends BaseHandler {
 
     private static Logger LOGGER = ContextLogger.create();
+    private static String USER = "user";
 
     private final UserService userService;
     private final JWTAuth jwtAuth;
@@ -31,51 +34,71 @@ public class UserHandler extends BaseHandler {
         this.userService = builder.build(UserService.class);
     }
 
-    @RouteConfig(path="/users", method= HttpMethod.POST, authRequired = false)
+    private void appendJwt(JsonObject user) {
+        JsonObject principal = new JsonObject();
+        principal.put("id", user.getString("id"));
+        principal.put("username", user.getString("username"));
+        user.put("Bearer", jwtAuth.generateToken(principal, new JWTOptions().setExpiresInMinutes(120)));
+    }
+
+    @RouteConfig(path="/users", method=HttpMethod.POST, authRequired=false)
     public void register(RoutingContext event) {
-
-        JsonObject message = event.getBodyAsJson().getJsonObject("user");
+        JsonObject message = event.getBodyAsJson().getJsonObject(USER);
         User user = new User(message);
+        user.setPassword(message.getString("password"));
+        userService.register(user, ar -> handle(event, ar));
+    }
 
-        userService.register(user, ar -> {
+    @RouteConfig(path="/users/login", method=HttpMethod.POST, authRequired=false)
+    public void login(RoutingContext event) {
+        JsonObject message = event.getBodyAsJson().getJsonObject(USER);
+        userService.login(message.getString("email"), ar -> {
             if (ar.succeeded()) {
-                JsonObject userAuthJson = ar.result();
-                generateJwt(userAuthJson);
-
-                event.response()
-                        .setStatusCode(HttpResponseStatus.CREATED.code())
-                        .end(Json.encodePrettily(userAuthJson));
-
+                String hashed = ar.result().getString("passwordHash");
+                if (BCrypt.checkpw(message.getString("password"), hashed)) {
+                    JsonObject userAuthJson = ar.result().getJsonObject("authJson");
+                    appendJwt(userAuthJson);
+                    event.response()
+                            .setStatusCode(HttpResponseStatus.CREATED.code())
+                            .end(Json.encodePrettily(userAuthJson));
+                } else {
+                    event.fail(new RuntimeException("Invalid user credentials"));
+                }
             } else {
-                event.fail(new RuntimeException(ar.cause().getMessage()));
+                event.fail(ar.cause());
             }
         });
     }
 
-    private void generateJwt(JsonObject user) {
-        JsonObject claimJson = new JsonObject();
-        claimJson.put("_id", user.getString("_id"));
-        claimJson.put("username", user.getString("username"));
-
-        user.put("Bearer", jwtAuth.generateToken(claimJson, new JWTOptions().setExpiresInMinutes(120)));
+    @RouteConfig(path="/user", method = HttpMethod.POST)
+    public void put(RoutingContext event) {
+        JsonObject message = event.getBodyAsJson().getJsonObject(USER);
+        User user = new User(message);
+        userService.put(getUserId(event), user, ar -> handle(event, ar));
     }
 
     @RouteConfig(path="/user")
     public void get(RoutingContext event) {
+        userService.get(getUserId(event), ar -> handle(event, ar));
+    }
 
-        JsonObject message = event.getBodyAsJson().getJsonObject("user");
+    private String getUserId(RoutingContext event) {
+        if (event.user() != null && event.user().principal() != null) {
+            return event.user().principal().getString("id");
+        }
 
-        userService.get(message.getString("username"), ar -> {
-            if (ar.succeeded()) {
-                JsonObject userAuthJson = ar.result();
+        return null;
+    }
 
-                event.response()
-                        .setStatusCode(HttpResponseStatus.CREATED.code())
-                        .end(Json.encodePrettily(userAuthJson));
+    private void handle(RoutingContext event, AsyncResult<JsonObject> ar) {
+        if (ar.succeeded()) {
+            JsonObject userAuthJson = ar.result();
+            event.response()
+                    .setStatusCode(HttpResponseStatus.CREATED.code())
+                    .end(Json.encodePrettily(userAuthJson));
 
-            } else {
-                event.fail(new RuntimeException(ar.cause().getMessage()));
-            }
-        });
+        } else {
+            event.fail(ar.cause());
+        }
     }
 }

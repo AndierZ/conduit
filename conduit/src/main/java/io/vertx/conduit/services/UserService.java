@@ -13,4 +13,8 @@ public interface UserService {
     void register(User user, Handler<AsyncResult<JsonObject>> resultHandler);
 
     void get(String id, Handler<AsyncResult<JsonObject>> resultHandler);
+
+    void login(String email, Handler<AsyncResult<JsonObject>> resultHandler);
+
+    void put(String id, User user, Handler<AsyncResult<JsonObject>> resultHandler);
 }

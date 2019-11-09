@@ -43,6 +43,11 @@ public class MongoDbServiceImpl implements MongoDbService {
     }
 
     @Override
+    public MongoDbService findById(String collection, String id, JsonObject fields, Handler<AsyncResult<JsonObject>> resultHandler) {
+        return findOne(collection, new JsonObject().put("id", id), fields, resultHandler);
+    }
+
+    @Override
     public MongoDbService find(String collection, JsonObject query, FindOptions options, Handler<AsyncResult<List<JsonObject>>> resultHandler) {
         try {
             mongoClient.findWithOptions(collection, query, options, ar -> {
@@ -103,6 +108,22 @@ public class MongoDbServiceImpl implements MongoDbService {
                     resultHandler.handle(Future.failedFuture(ar.cause()));
                 }
             });
+        } catch (Exception e) {
+            resultHandler.handle(Future.failedFuture(e));
+        }
+        return this;
+    }
+
+    @Override
+    public MongoDbService findOneAndReplace(String collection, JsonObject query, JsonObject update, FindOptions findOptions, UpdateOptions updateOptions, Handler<AsyncResult<JsonObject>> resultHandler) {
+        try {
+          mongoClient.findOneAndReplaceWithOptions(collection, query, update, findOptions, updateOptions, ar -> {
+              if (ar.succeeded()) {
+                  resultHandler.handle(Future.succeededFuture(ar.result()));
+              } else {
+                  resultHandler.handle(Future.failedFuture(ar.cause()));
+              }
+          });
         } catch (Exception e) {
             resultHandler.handle(Future.failedFuture(e));
         }

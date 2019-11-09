@@ -18,19 +18,25 @@ public interface MongoDbService {
     String ADDRESS = MongoDbService.class.getName();
 
     @Fluent
-    public MongoDbService findOne(final String collection, final JsonObject query, final JsonObject fields, final Handler<AsyncResult<JsonObject>> resultHandler);
+    MongoDbService findOne(final String collection, final JsonObject query, final JsonObject fields, final Handler<AsyncResult<JsonObject>> resultHandler);
 
     @Fluent
-    public MongoDbService find(final String collection, final JsonObject query, final FindOptions options, Handler<AsyncResult<List<JsonObject>>> resultHandler);
+    MongoDbService findById(final String collection, String id, final JsonObject fields, final Handler<AsyncResult<JsonObject>> resultHandler);
 
     @Fluent
-    public MongoDbService insertOne(final String collection, final JsonObject document, final Handler<AsyncResult<String>> resultHandler);
+    MongoDbService find(final String collection, final JsonObject query, final FindOptions options, Handler<AsyncResult<List<JsonObject>>> resultHandler);
 
     @Fluent
-    public MongoDbService upsert(final String collection, final JsonObject query, final JsonObject update, final UpdateOptions options, Handler<AsyncResult<MongoClientUpdateResult>> resultHandler);
+    MongoDbService insertOne(final String collection, final JsonObject document, final Handler<AsyncResult<String>> resultHandler);
 
     @Fluent
-    public MongoDbService findOneAndUpdate(final String collection, final JsonObject query, final JsonObject update, final FindOptions findOptions, final UpdateOptions updateOptions, final Handler<AsyncResult<JsonObject>> resultHandler);
+    MongoDbService upsert(final String collection, final JsonObject query, final JsonObject update, final UpdateOptions options, Handler<AsyncResult<MongoClientUpdateResult>> resultHandler);
+
+    @Fluent
+    MongoDbService findOneAndUpdate(final String collection, final JsonObject query, final JsonObject update, final FindOptions findOptions, final UpdateOptions updateOptions, final Handler<AsyncResult<JsonObject>> resultHandler);
+
+    @Fluent
+    MongoDbService findOneAndReplace(String collection, JsonObject query, JsonObject update, FindOptions findOptions, UpdateOptions updateOptions, Handler<AsyncResult<JsonObject>> resultHandler);
 
     @ProxyClose
     void close();

@@ -1,19 +1,15 @@
 package io.vertx.conduit;
 
-import io.vertx.conduit.services.MongoDbService;
-import io.vertx.conduit.verticles.MongoDbServiceVerticle;
-import logging.ContextLogger;
 import io.vertx.conduit.verticles.HttpVerticle;
+import io.vertx.conduit.verticles.MongoDbServiceVerticle;
 import io.vertx.conduit.verticles.UserServiceVerticle;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
-import io.vertx.core.AbstractVerticle;
-import io.vertx.core.CompositeFuture;
-import io.vertx.core.DeploymentOptions;
-import io.vertx.core.Future;
+import io.vertx.core.*;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
+import logging.ContextLogger;
 
 public class App extends AbstractVerticle {
     private static final String CONFIG_PATH = "app.json";
@@ -45,7 +41,7 @@ public class App extends AbstractVerticle {
         });
     }
 
-    private Future<Void> deployVerticle(Class clz, DeploymentOptions deploymentOptions){
+    private Future<Void> deployVerticle(Class<? extends Verticle> clz, DeploymentOptions deploymentOptions){
         Future<Void> deploymentFuture = Future.future();
         vertx.deployVerticle(clz, deploymentOptions, ar ->{
             if (ar.succeeded()) {
