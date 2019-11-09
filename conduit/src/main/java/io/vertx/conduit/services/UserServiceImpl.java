@@ -1,5 +1,6 @@
 package io.vertx.conduit.services;
 
+import io.vertx.serviceproxy.ServiceProxyBuilder;
 import logging.ContextLogger;
 import io.vertx.conduit.entities.User;
 import io.vertx.core.AsyncResult;
@@ -17,27 +18,32 @@ import java.util.Date;
 public class UserServiceImpl implements UserService {
 
     private static final Logger LOGGER = ContextLogger.create();
-
-    private static int userIdCounter;
+    private static final String collection = "users";
 
     // active user being processed
     private final User user;
     private final JsonObject retJson;
+    private final MongoDbService mongoDbService;
 
     public UserServiceImpl(Vertx vertx) {
         this.user = new User();
         this.retJson = new JsonObject();
+        ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(MongoDbService.ADDRESS);
+        this.mongoDbService = builder.build(MongoDbService.class);
     }
 
     @Override
     public void register(JsonObject message, Handler<AsyncResult<JsonObject>> resultHandler) {
-        user.fromJson(message);
-        user.set_id(new ObjectId(new Date(), userIdCounter++));
 
-        retJson.clear();
-        toAuthJson(user, retJson);
-
-        resultHandler.handle(Future.succeededFuture(retJson));
+        this.mongoDbService.insertOne(collection, message, ar -> {
+            if (ar.succeeded()) {
+                retJson.clear();
+                toAuthJson(message, retJson);
+                resultHandler.handle(Future.succeededFuture(retJson));
+            } else {
+                resultHandler.handle(Future.failedFuture(ar.cause()));
+            }
+        });
     }
 
     @Override
@@ -59,19 +65,11 @@ public class UserServiceImpl implements UserService {
 
 
 
-    private JsonObject toAuthJson(User user, JsonObject retJson) {
-        if (user.getBio() != null) {
-            retJson.put("bio", user.getBio());
-        }
-        if (user.getEmail() != null) {
-            retJson.put("email", user.getEmail());
-        }
-        if (user.getImage() != null) {
-            retJson.put("image", user.getImage());
-        }
-        if (user.getUsername() != null) {
-            retJson.put("username", user.getUsername());
-        }
+    private JsonObject toAuthJson(JsonObject user, JsonObject retJson) {
+        retJson.put("bio", user.getString("bio"));
+        retJson.put("email", user.getString("email"));
+        retJson.put("image", user.getString("image"));
+        retJson.put("username", user.getString("username"));
 
         return retJson;
     }

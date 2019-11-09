@@ -18,10 +18,9 @@
 14. Create annotation for configuring routes
 15. Add annotation process to reigster handlers to routes
 
-Add ability to write new user into mongo db
-complete the features for user service
-add articles
-add comments using RX2?
+CRUD for user with authentication
+CRUD articles
+CRUD comments using RX2?
 add follow/unfollow
 add favorite/unfavorite
 add tags

@@ -20,7 +20,7 @@ public class UserHandler extends BaseHandler {
 
     private static Logger LOGGER = ContextLogger.create();
 
-    private final UserService service;
+    private final UserService userService;
     private final JWTAuth jwtAuth;
     private final JsonObject claimJson;
 
@@ -28,7 +28,7 @@ public class UserHandler extends BaseHandler {
         super(vertx);
         ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(UserService.ADDRESS);
         this.jwtAuth = jwtAuth;
-        this.service = builder.build(UserService.class);
+        this.userService = builder.build(UserService.class);
         this.claimJson = new JsonObject();
     }
 
@@ -37,7 +37,7 @@ public class UserHandler extends BaseHandler {
 
         JsonObject message = event.getBodyAsJson().getJsonObject("user");
 
-        service.register(message, ar -> {
+        userService.register(message, ar -> {
             if (ar.succeeded()) {
                 JsonObject userAuthJson = ar.result();
                 generateJwt(userAuthJson);
@@ -65,7 +65,7 @@ public class UserHandler extends BaseHandler {
 
         JsonObject message = event.getBodyAsJson().getJsonObject("user");
 
-        service.get(message.getString("username"), ar -> {
+        userService.get(message.getString("username"), ar -> {
             if (ar.succeeded()) {
                 JsonObject userAuthJson = ar.result();
 
