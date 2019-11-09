@@ -1,5 +1,6 @@
 package io.vertx.conduit.handlers;
 
+import io.vertx.conduit.entities.User;
 import logging.ContextLogger;
 import routerutils.RouteConfig;
 import io.netty.handler.codec.http.HttpResponseStatus;
@@ -22,22 +23,21 @@ public class UserHandler extends BaseHandler {
 
     private final UserService userService;
     private final JWTAuth jwtAuth;
-    private final JsonObject claimJson;
 
     public UserHandler(Vertx vertx, JWTAuth jwtAuth) {
         super(vertx);
         ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(UserService.ADDRESS);
         this.jwtAuth = jwtAuth;
         this.userService = builder.build(UserService.class);
-        this.claimJson = new JsonObject();
     }
 
     @RouteConfig(path="/users", method= HttpMethod.POST, authRequired = false)
     public void register(RoutingContext event) {
 
         JsonObject message = event.getBodyAsJson().getJsonObject("user");
+        User user = new User(message);
 
-        userService.register(message, ar -> {
+        userService.register(user, ar -> {
             if (ar.succeeded()) {
                 JsonObject userAuthJson = ar.result();
                 generateJwt(userAuthJson);
@@ -53,11 +53,11 @@ public class UserHandler extends BaseHandler {
     }
 
     private void generateJwt(JsonObject user) {
-        claimJson.clear();
+        JsonObject claimJson = new JsonObject();
         claimJson.put("_id", user.getString("_id"));
         claimJson.put("username", user.getString("username"));
 
-        user.put("Bearer", jwtAuth.generateToken(claimJson, new JWTOptions().setExpiresInMinutes(60)));
+        user.put("Bearer", jwtAuth.generateToken(claimJson, new JWTOptions().setExpiresInMinutes(120)));
     }
 
     @RouteConfig(path="/user")

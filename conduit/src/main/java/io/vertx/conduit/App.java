@@ -1,5 +1,7 @@
 package io.vertx.conduit;
 
+import io.vertx.conduit.services.MongoDbService;
+import io.vertx.conduit.verticles.MongoDbServiceVerticle;
 import logging.ContextLogger;
 import io.vertx.conduit.verticles.HttpVerticle;
 import io.vertx.conduit.verticles.UserServiceVerticle;
@@ -26,7 +28,8 @@ public class App extends AbstractVerticle {
                 DeploymentOptions deploymentOptions = new DeploymentOptions().setConfig(ar1.result());
                 CompositeFuture.all(
                     deployVerticle(HttpVerticle.class, deploymentOptions),
-                    deployVerticle(UserServiceVerticle.class, deploymentOptions))
+                    deployVerticle(UserServiceVerticle.class, deploymentOptions),
+                        deployVerticle(MongoDbServiceVerticle.class, deploymentOptions))
                 .setHandler(ar2 -> {
                     if (ar2.succeeded()) {
                         LOGGER.info("Successfully deployed verticals.");

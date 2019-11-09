@@ -1,6 +1,10 @@
 {
   "env": "test",
-  "db.name": "conduit_test",
-  "connection_string": "mongodb://localhost:27017",
-  "secret" : "1summerday20!9"
+  "secret" : "1summerday20!9",
+
+  "mongodb": {
+    "db_name": "conduit",
+    "useObjectId": true,
+    "connection_string": "mongodb://localhost:27017"
+  }
 }

@@ -2,6 +2,7 @@ package io.vertx.conduit.entities;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import java.util.List;
 
@@ -11,18 +12,8 @@ public class User extends Base {
     public User() {}
 
     public User(JsonObject json) {
-
-    }
-
-    public void fromJson(JsonObject jsonObject) {
-        // TODO validate json object. ensure correct format for certain fields (email)
-        // TODO how to enforce uniqueness based on username or id in the database?
-        fromBaseJson(jsonObject, this);
-        UserConverter.fromJson(jsonObject, this);
-    }
-
-    public String getUsername() {
-        return username;
+        fromJson(json);
+        setPassword(json.getString("password"));
     }
 
     String username;
@@ -85,9 +76,42 @@ public class User extends Base {
         this.image = image;
     }
 
-    public JsonObject toJson(JsonObject json) {
+    public JsonObject toJson() {
+        JsonObject json = new JsonObject();
         toBaseJson(this, json);
         UserConverter.toJson(this, json);
         return json;
+    }
+
+
+    private void fromJson(JsonObject jsonObject) {
+        // TODO validate json object. ensure correct format for certain fields (email)
+        // TODO how to enforce uniqueness based on username or id in the database?
+        fromBaseJson(jsonObject, this);
+        UserConverter.fromJson(jsonObject, this);
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setPassword(String password) {
+        String salt = BCrypt.gensalt();
+        String passwordHash = BCrypt.hashpw(password, salt);
+        setPasswordHash(passwordHash);
+    }
+
+    public boolean validatePassword(String password) {
+        return BCrypt.checkpw(password, getPasswordHash());
+    }
+
+    public JsonObject toAuthJson() {
+        JsonObject retJson = new JsonObject();
+        retJson.put("bio", bio);
+        retJson.put("email", email);
+        retJson.put("image", image);
+        retJson.put("username", username);
+
+        return retJson;
     }
 }

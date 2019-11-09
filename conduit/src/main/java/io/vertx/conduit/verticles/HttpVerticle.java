@@ -33,7 +33,7 @@ public class HttpVerticle extends AbstractVerticle {
 
         Router baseRouter = Router.router(vertx);
 
-        new RouteBuilder(vertx, baseRouter, JWTAuthHandler.create(jwtAuth), BodyHandler.create())
+        new RouteBuilder(baseRouter, JWTAuthHandler.create(jwtAuth), BodyHandler.create())
         .add(new UserHandler(vertx, jwtAuth))
         .build();
 

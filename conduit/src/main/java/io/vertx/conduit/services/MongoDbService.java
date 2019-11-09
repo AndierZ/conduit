@@ -15,7 +15,7 @@ import java.util.List;
 @ProxyGen
 public interface MongoDbService {
 
-    public static final String ADDRESS = MongoDbService.class.getName();
+    String ADDRESS = MongoDbService.class.getName();
 
     @Fluent
     public MongoDbService findOne(final String collection, final JsonObject query, final JsonObject fields, final Handler<AsyncResult<JsonObject>> resultHandler);
@@ -33,5 +33,5 @@ public interface MongoDbService {
     public MongoDbService findOneAndUpdate(final String collection, final JsonObject query, final JsonObject update, final FindOptions findOptions, final UpdateOptions updateOptions, final Handler<AsyncResult<JsonObject>> resultHandler);
 
     @ProxyClose
-    public void close();
+    void close();
 }

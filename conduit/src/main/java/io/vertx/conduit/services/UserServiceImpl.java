@@ -21,25 +21,19 @@ public class UserServiceImpl implements UserService {
     private static final String collection = "users";
 
     // active user being processed
-    private final User user;
-    private final JsonObject retJson;
     private final MongoDbService mongoDbService;
 
     public UserServiceImpl(Vertx vertx) {
-        this.user = new User();
-        this.retJson = new JsonObject();
         ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(MongoDbService.ADDRESS);
         this.mongoDbService = builder.build(MongoDbService.class);
     }
 
     @Override
-    public void register(JsonObject message, Handler<AsyncResult<JsonObject>> resultHandler) {
-
-        this.mongoDbService.insertOne(collection, message, ar -> {
+    public void register(User user, Handler<AsyncResult<JsonObject>> resultHandler) {
+        this.mongoDbService.insertOne(collection, user.toJson(), ar -> {
             if (ar.succeeded()) {
-                retJson.clear();
-                toAuthJson(message, retJson);
-                resultHandler.handle(Future.succeededFuture(retJson));
+                user.set_id(new ObjectId(ar.result()));
+                resultHandler.handle(Future.succeededFuture(user.toAuthJson()));
             } else {
                 resultHandler.handle(Future.failedFuture(ar.cause()));
             }
@@ -48,30 +42,10 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void get(String id, Handler<AsyncResult<JsonObject>> resultHandler) {
+        JsonObject retJson = new JsonObject();
         retJson.clear();
         retJson.put("ack", true);
         resultHandler.handle(Future.succeededFuture(retJson));
-    }
-
-    private void setPassword(User user, String password) {
-        String salt = BCrypt.gensalt();
-        String passwordHash = BCrypt.hashpw(password, salt);
-        user.setPasswordHash(passwordHash);
-    }
-
-    private boolean validatePassword(User user, String password) {
-        return BCrypt.checkpw(password, user.getPasswordHash());
-    }
-
-
-
-    private JsonObject toAuthJson(JsonObject user, JsonObject retJson) {
-        retJson.put("bio", user.getString("bio"));
-        retJson.put("email", user.getString("email"));
-        retJson.put("image", user.getString("image"));
-        retJson.put("username", user.getString("username"));
-
-        return retJson;
     }
 
     private JsonObject toJsonFor(User user) {

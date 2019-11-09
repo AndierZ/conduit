@@ -11,15 +11,13 @@ import java.util.List;
 
 public class RouteBuilder {
 
-    private final Vertx vertx;
     private boolean finalized;
     private final List<BaseHandler> handlers;
     private final Router baseRouter;
     private final AuthHandler authHandler;
     private final Handler<RoutingContext> preHandler;
 
-    public RouteBuilder(Vertx vertx, Router baseRouter, AuthHandler authHandler, Handler<RoutingContext> preHandler) {
-        this.vertx = vertx;
+    public RouteBuilder(Router baseRouter, AuthHandler authHandler, Handler<RoutingContext> preHandler) {
         this.handlers = new ArrayList<>();
         this.baseRouter = baseRouter;
         this.authHandler = authHandler;
