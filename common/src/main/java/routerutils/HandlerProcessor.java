@@ -17,7 +17,7 @@ public final class HandlerProcessor {
 
     private static Logger LOGGER = ContextLogger.create();
 
-    public static <H, T extends Handler<RoutingContext>> void buildHandler(final Router router, final T preHandler, final H handler, final AuthHandler authHandler) {
+    public static <H, T extends Handler<RoutingContext>, K extends Handler<RoutingContext>> void buildHandler(final Router router, final T preHandler, final H handler, final AuthHandler authHandler, final K optionalAuthHandler) {
         Class<?> clazz = handler.getClass();
         RouteConfig baseRouteConfig = clazz.getAnnotation(RouteConfig.class);
         if (baseRouteConfig != null) {
@@ -43,14 +43,21 @@ public final class HandlerProcessor {
                         throw new IllegalArgumentException("authHandler must be specified when authRequired = true");
                     }
                     route.handler(authHandler);
+                } else {
+                    if (optionalAuthHandler != null) {
+                        route.handler(optionalAuthHandler);
+                    }
                 }
-                createHandler(preHandler, handler, method, route);
+                if (preHandler != null) {
+                    route.handler(preHandler);
+                }
+                createHandler(handler, method, route);
             });
         }
     }
 
-    private static <H, T extends Handler<RoutingContext>> void createHandler(final T preHandler, final H handler, final Method method, final Route route) {
-        route.handler(preHandler).handler(event -> {
+    private static <H> void createHandler(final H handler, final Method method, final Route route) {
+        route.handler(event -> {
             try {
                 method.invoke(handler, event);
             } catch (Exception e) {

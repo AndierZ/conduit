@@ -1,22 +1,24 @@
 package io.vertx.conduit.handlers;
 
-import io.vertx.conduit.entities.User;
-import io.vertx.core.AsyncResult;
-import logging.ContextLogger;
-import org.springframework.security.crypto.bcrypt.BCrypt;
-import routerutils.RouteConfig;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.conduit.entities.User;
 import io.vertx.conduit.services.UserService;
+import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
+import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTOptions;
+import io.vertx.ext.jwt.JWT;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
+import logging.ContextLogger;
+import org.springframework.security.crypto.bcrypt.BCrypt;
 import routerutils.BaseHandler;
+import routerutils.RouteConfig;
 
 @RouteConfig(path="/api", produces = "application/json")
 public class UserHandler extends BaseHandler {
@@ -82,8 +84,9 @@ public class UserHandler extends BaseHandler {
         userService.get(new JsonObject().put("_id", getUserId(event)), ar -> handle(event, ar));
     }
 
-    @RouteConfig(path="/profiles/:username", authRequired = false)
+    @RouteConfig(path="/:username", authRequired = false)
     public void getProfile(RoutingContext event) {
+
         String username = event.request().getParam("username");
         String queryingUserId = getUserId(event);
 

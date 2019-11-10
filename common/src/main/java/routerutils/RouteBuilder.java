@@ -14,14 +14,37 @@ public class RouteBuilder {
     private boolean finalized;
     private final List<BaseHandler> handlers;
     private final Router baseRouter;
-    private final AuthHandler authHandler;
-    private final Handler<RoutingContext> preHandler;
+    private AuthHandler authHandler;
+    private Handler<RoutingContext> preHandler;
+    private Handler<RoutingContext> optionalAuthHandler;
 
-    public RouteBuilder(Router baseRouter, AuthHandler authHandler, Handler<RoutingContext> preHandler) {
+    public RouteBuilder(Router baseRouter) {
         this.handlers = new ArrayList<>();
         this.baseRouter = baseRouter;
+    }
+
+    public RouteBuilder addAuthHandler(AuthHandler authHandler) {
+        if (finalized) {
+            throw new RuntimeException("Routes already built.");
+        }
         this.authHandler = authHandler;
+        return this;
+    }
+
+    public RouteBuilder addOptionalAuthHandler(Handler<RoutingContext> optionalAuthHandler) {
+        if (finalized) {
+            throw new RuntimeException("Routes already built.");
+        }
+        this.optionalAuthHandler = optionalAuthHandler;
+        return this;
+    }
+
+    public RouteBuilder addPreHandler(Handler<RoutingContext> preHandler) {
+        if (finalized) {
+            throw new RuntimeException("Routes already built.");
+        }
         this.preHandler = preHandler;
+        return this;
     }
 
     public RouteBuilder add(BaseHandler handler){
@@ -40,7 +63,7 @@ public class RouteBuilder {
         }
 
         for(BaseHandler handler : handlers) {
-            HandlerProcessor.buildHandler(baseRouter, preHandler, handler, authHandler);
+            HandlerProcessor.buildHandler(baseRouter, preHandler, handler, authHandler, optionalAuthHandler);
         }
 
         finalized = true;

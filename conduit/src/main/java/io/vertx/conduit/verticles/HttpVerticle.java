@@ -1,5 +1,6 @@
 package io.vertx.conduit.verticles;
 
+import io.vertx.conduit.handlers.JwtOptionalHandler;
 import logging.ContextLogger;
 import io.vertx.conduit.handlers.UserHandler;
 import io.vertx.core.AbstractVerticle;
@@ -25,17 +26,22 @@ public class HttpVerticle extends AbstractVerticle {
 
         JsonObject config = config();
 
-        this.jwtAuth = JWTAuth.create(vertx, new JWTAuthOptions().addPubSecKey(
+        JWTAuthOptions jwtAuthOptions = new JWTAuthOptions().addPubSecKey(
                 new PubSecKeyOptions()
                         .setAlgorithm("HS256")
                         .setPublicKey(config.getString("secret"))
-                        .setSymmetric(true)));
+                        .setSymmetric(true));
+
+        this.jwtAuth = JWTAuth.create(vertx, jwtAuthOptions);
 
         Router baseRouter = Router.router(vertx);
 
-        new RouteBuilder(baseRouter, JWTAuthHandler.create(jwtAuth), BodyHandler.create())
-        .add(new UserHandler(vertx, jwtAuth))
-        .build();
+        new RouteBuilder(baseRouter)
+                .addAuthHandler(JWTAuthHandler.create(jwtAuth))
+                .addOptionalAuthHandler(new JwtOptionalHandler(jwtAuthOptions))
+                .addPreHandler(BodyHandler.create())
+                .add(new UserHandler(vertx, jwtAuth))
+                .build();
 
         vertx.createHttpServer()
                 .requestHandler(baseRouter)
