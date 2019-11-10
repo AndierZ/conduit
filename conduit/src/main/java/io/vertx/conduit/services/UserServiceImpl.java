@@ -35,7 +35,7 @@ public class UserServiceImpl implements UserService {
     public void register(User user, Handler<AsyncResult<User>> resultHandler) {
         mongoDbService.insertOne(USER_COLLECTION, user.toJson(), ar -> {
             if (ar.succeeded()) {
-                user.set_id(new ObjectId(ar.result()));
+                user.set_id(ar.result());
                 resultHandler.handle(Future.succeededFuture(user));
             } else {
                 resultHandler.handle(Future.failedFuture(ar.cause()));
