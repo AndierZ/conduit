@@ -10,19 +10,19 @@ import java.util.Objects;
 public abstract class Base implements Serializable {
     private static final long serialVersionUID = -5457854685085504749L;
 
-    private ObjectId id;
+    private ObjectId _id;
     private ObjectId createdBy;
     private Date createdDate;
     private Date updatedDate;
     private ObjectId updatedBy;
     private Boolean isActive;
 
-    public ObjectId getId() {
-        return id;
+    public ObjectId get_id() {
+        return _id;
     }
 
-    public void setId(ObjectId id) {
-        this.id = id;
+    public void set_id(ObjectId _id) {
+        this._id = _id;
     }
 
     public ObjectId getCreatedBy() {
@@ -70,12 +70,12 @@ public abstract class Base implements Serializable {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         Base base = (Base) o;
-        return id.equals(base.id);
+        return _id.equals(base._id);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(id);
+        return Objects.hash(_id);
     }
 
     protected JsonObject toBaseJson(Base base, JsonObject json) {
@@ -85,8 +85,8 @@ public abstract class Base implements Serializable {
         if (base.getUpdatedBy() != null) {
             json.put("updatedBy", new JsonObject().put("$oid", base.getUpdatedBy().toHexString()));
         }
-        if (base.getId() != null) {
-            json.put("id", new JsonObject().put("$oid", base.getId().toHexString()));
+        if (base.get_id() != null) {
+            json.put("_id", base.get_id().toHexString());
         }
         return json;
     }
@@ -101,7 +101,7 @@ public abstract class Base implements Serializable {
             obj.setUpdatedBy(new ObjectId(updatedBy.getValue("$oid").toString()));
         }
         if (json.getValue("_id") instanceof String) {
-            this.setId(new ObjectId(json.getValue("_id").toString()));
+            this.set_id(new ObjectId(json.getValue("_id").toString()));
         }
     }
 }

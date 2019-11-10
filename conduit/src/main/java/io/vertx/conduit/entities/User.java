@@ -83,7 +83,7 @@ public class User extends Base {
     }
 
 
-    public void fromJson(JsonObject jsonObject) {
+    private void fromJson(JsonObject jsonObject) {
         // TODO validate json object. ensure correct format for certain fields (email)
         // TODO how to enforce uniqueness based on username or id in the database?
         fromBaseJson(jsonObject, this);
@@ -102,7 +102,6 @@ public class User extends Base {
 
     public JsonObject toAuthJson() {
         JsonObject retJson = new JsonObject();
-        retJson.put("id", getId() != null ? getId().toHexString() : null);
         retJson.put("bio", bio);
         retJson.put("email", email);
         retJson.put("image", image);

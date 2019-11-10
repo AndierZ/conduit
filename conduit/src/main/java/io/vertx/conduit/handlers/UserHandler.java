@@ -34,19 +34,11 @@ public class UserHandler extends BaseHandler {
         this.userService = builder.build(UserService.class);
     }
 
-    private void appendJwt(JsonObject user) {
+    private void appendJwt(JsonObject user, String id) {
         JsonObject principal = new JsonObject();
-        principal.put("id", user.getString("id"));
+        principal.put("id", id);
         principal.put("username", user.getString("username"));
         user.put("Bearer", jwtAuth.generateToken(principal, new JWTOptions().setExpiresInMinutes(120)));
-    }
-
-    @RouteConfig(path="/users", method=HttpMethod.POST, authRequired=false)
-    public void register(RoutingContext event) {
-        JsonObject message = event.getBodyAsJson().getJsonObject(USER);
-        User user = new User(message);
-        user.setPassword(message.getString("password"));
-        userService.register(user, ar -> handle(event, ar));
     }
 
     @RouteConfig(path="/users/login", method=HttpMethod.POST, authRequired=false)
@@ -54,10 +46,10 @@ public class UserHandler extends BaseHandler {
         JsonObject message = event.getBodyAsJson().getJsonObject(USER);
         userService.login(message.getString("email"), ar -> {
             if (ar.succeeded()) {
-                String hashed = ar.result().getString("passwordHash");
+                String hashed = ar.result().getPasswordHash();
                 if (BCrypt.checkpw(message.getString("password"), hashed)) {
-                    JsonObject userAuthJson = ar.result().getJsonObject("authJson");
-                    appendJwt(userAuthJson);
+                    JsonObject userAuthJson = ar.result().toAuthJson();
+                    appendJwt(userAuthJson, ar.result().get_id().toHexString());
                     event.response()
                             .setStatusCode(HttpResponseStatus.CREATED.code())
                             .end(Json.encodePrettily(userAuthJson));
@@ -68,6 +60,14 @@ public class UserHandler extends BaseHandler {
                 event.fail(ar.cause());
             }
         });
+    }
+
+    @RouteConfig(path="/users", method=HttpMethod.POST, authRequired=false)
+    public void register(RoutingContext event) {
+        JsonObject message = event.getBodyAsJson().getJsonObject(USER);
+        User user = new User(message);
+        user.setPassword(message.getString("password"));
+        userService.register(user, ar -> handle(event, ar));
     }
 
     @RouteConfig(path="/user", method = HttpMethod.POST)
@@ -90,9 +90,9 @@ public class UserHandler extends BaseHandler {
         return null;
     }
 
-    private void handle(RoutingContext event, AsyncResult<JsonObject> ar) {
+    private void handle(RoutingContext event, AsyncResult<User> ar) {
         if (ar.succeeded()) {
-            JsonObject userAuthJson = ar.result();
+            JsonObject userAuthJson = ar.result().toAuthJson();
             event.response()
                     .setStatusCode(HttpResponseStatus.CREATED.code())
                     .end(Json.encodePrettily(userAuthJson));
