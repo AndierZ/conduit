@@ -110,4 +110,13 @@ public class User extends Base {
         return retJson;
     }
 
+    public Object toProfileJsonFor(User user) {
+        JsonObject retJson = new JsonObject();
+        retJson.put("bio", bio);
+        retJson.put("image", image);
+        retJson.put("username", username);
+        retJson.put("following", false);
+
+        return retJson;
+    }
 }

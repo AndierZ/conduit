@@ -79,10 +79,47 @@ public class UserHandler extends BaseHandler {
 
     @RouteConfig(path="/user")
     public void get(RoutingContext event) {
-        userService.get(getUserId(event), ar -> handle(event, ar));
+        userService.get(new JsonObject().put("_id", getUserId(event)), ar -> handle(event, ar));
     }
 
-    private String getUserId(RoutingContext event) {
+    @RouteConfig(path="/profiles/:username", authRequired = false)
+    public void getProfile(RoutingContext event) {
+        String username = event.request().getParam("username");
+        String queryingUserId = getUserId(event);
+
+        if (queryingUserId != null) {
+            userService.get(new JsonObject().put("_id", queryingUserId), ar -> {
+                if (ar.succeeded()) {
+                    User queryingUser = ar.result();
+                    userService.get(new JsonObject().put("username", username), ar2 -> {
+                        if (ar2.succeeded()) {
+                            event.response()
+                                    .setStatusCode(HttpResponseStatus.OK.code())
+                                    .end(Json.encodePrettily(ar2.result().toProfileJsonFor(queryingUser)));
+                        } else {
+                            event.fail(ar2.cause());
+                        }
+                    });
+                } else {
+                    event.fail(ar.cause());
+                }
+            });
+        } else {
+            userService.get(new JsonObject().put("username", username), ar2 -> {
+                if (ar2.succeeded()) {
+                    event.response()
+                            .setStatusCode(HttpResponseStatus.OK.code())
+                            .end(Json.encodePrettily(ar2.result().toProfileJsonFor(null)));
+                } else {
+                    event.fail(ar2.cause());
+                }
+            });
+        }
+
+
+    }
+
+    private static String getUserId(RoutingContext event) {
         if (event.user() != null && event.user().principal() != null) {
             return event.user().principal().getString("id");
         }

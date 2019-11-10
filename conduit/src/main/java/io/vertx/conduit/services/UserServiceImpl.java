@@ -49,9 +49,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void get(String id, Handler<AsyncResult<User>> resultHandler) {
+    public void get(JsonObject query, Handler<AsyncResult<User>> resultHandler) {
 
-        mongoDbService.findById(USER_COLLECTION, id, null, ar -> handleUser(resultHandler, ar));
+        mongoDbService.findOne(USER_COLLECTION, query, null, ar -> handleUser(resultHandler, ar));
     }
 
     @Override
