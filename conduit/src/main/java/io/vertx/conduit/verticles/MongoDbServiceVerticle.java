@@ -40,7 +40,7 @@ public class MongoDbServiceVerticle extends AbstractVerticle {
                             LOGGER.info("MongoDb service published");
 
                         } else {
-                            LOGGER.error("Error publishing services", ar.cause());
+                            LOGGER.error("Error publishing MongoDb service", ar.cause());
                         }
                     });
                 } else {

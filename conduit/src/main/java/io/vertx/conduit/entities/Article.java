@@ -103,4 +103,10 @@ public class Article extends Base {
         super.fromJson(jsonObject);
         ArticleConverter.fromJson(jsonObject, this);
     }
+
+    public JsonObject toJsonForUser(User user) {
+        JsonObject json = toJson();
+        json.put("author", author.toProfileJsonFor(user));
+        return json;
+    }
 }
