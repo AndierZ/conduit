@@ -44,7 +44,7 @@ public class MongoDbServiceImpl implements MongoDbService {
 
     @Override
     public MongoDbService findById(String collection, String id, JsonObject fields, Handler<AsyncResult<JsonObject>> resultHandler) {
-        return findOne(collection, new JsonObject().put("id", id), fields, resultHandler);
+        return findOne(collection, new JsonObject().put("_id", id), fields, resultHandler);
     }
 
     @Override

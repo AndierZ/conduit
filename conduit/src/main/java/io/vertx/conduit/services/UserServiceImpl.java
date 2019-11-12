@@ -55,9 +55,15 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    public void getById(String id, Handler<AsyncResult<User>> resultHandler) {
+
+        mongoDbService.findById(USER_COLLECTION, id, null, ar -> handleUser(resultHandler, ar));
+    }
+
+    @Override
     public void put(String id, User user, Handler<AsyncResult<User>> resultHandler) {
         // Have to filter on all unique fields for mongodb to replace the document instead of inserting a new one
-        mongoDbService.findOneAndReplace(USER_COLLECTION, new JsonObject().put("id", id).put("email", user.getEmail()), user.toJson(), findOptions, updateOptions, ar -> handleUser(resultHandler, ar));
+        mongoDbService.findOneAndReplace(USER_COLLECTION, new JsonObject().put("_id", id).put("email", user.getEmail()).put("username", user.getUsername()), user.toJson(), findOptions, updateOptions, ar -> handleUser(resultHandler, ar));
     }
 
     private void handleUser(Handler<AsyncResult<User>> resultHandler, AsyncResult<JsonObject> ar) {

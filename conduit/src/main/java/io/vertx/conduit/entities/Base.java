@@ -3,16 +3,14 @@ package io.vertx.conduit.entities;
 import io.vertx.core.json.JsonObject;
 
 import java.io.Serializable;
-import java.util.Date;
-import java.util.Objects;
 
 public abstract class Base implements Serializable {
     private String _id;
     private String createdBy;
-    private Date createdDate;
-    private Date updatedDate;
+    private long createdTime;
+    private long updatedTime;
     private String updatedBy;
-    private Boolean isActive;
+    private boolean isActive;
 
     public String get_id() {
         return _id;
@@ -30,20 +28,20 @@ public abstract class Base implements Serializable {
         this.createdBy = createdBy;
     }
 
-    public Date getCreatedDate() {
-        return createdDate;
+    public long getCreatedTime() {
+        return createdTime;
     }
 
-    public void setCreatedDate(Date createdDate) {
-        this.createdDate = createdDate;
+    public void setCreatedTime(long createdTime) {
+        this.createdTime = createdTime;
     }
 
-    public Date getUpdatedDate() {
-        return updatedDate;
+    public long getUpdatedTime() {
+        return updatedTime;
     }
 
-    public void setUpdatedDate(Date updatedDate) {
-        this.updatedDate = updatedDate;
+    public void setUpdatedTime(long updatedTime) {
+        this.updatedTime = updatedTime;
     }
 
     public String getUpdatedBy() {
@@ -54,53 +52,23 @@ public abstract class Base implements Serializable {
         this.updatedBy = updatedBy;
     }
 
-    public Boolean getIsActive() {
+    public boolean getIsActive() {
         return isActive;
     }
 
-    public void setIsActive(Boolean isActive) {
+    public void setIsActive(boolean isActive) {
         this.isActive = isActive;
     }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        Base base = (Base) o;
-        return _id.equals(base._id);
+    protected void toJson(JsonObject json) {
+        json.put("_id", _id);
     }
 
-    @Override
-    public int hashCode() {
-        return Objects.hash(_id);
-    }
-
-    protected JsonObject toBaseJson(Base base, JsonObject json) {
-        if (base.getCreatedBy() != null) {
-            json.put("createdBy", base.getCreatedBy());
-        }
-        if (base.getUpdatedBy() != null) {
-            json.put("updatedBy", base.getUpdatedBy());
-        }
-        if (base.get_id() != null) {
-            json.put("_id", base.get_id());
-        }
-        return json;
-    }
-
-    public void fromBaseJson(JsonObject json, Base obj) {
-        final String createdBy = json.getString("createdBy");
-        if (createdBy != null) {
-            obj.setCreatedBy(createdBy);
-        }
-        final String updatedBy = json.getString("updatedBy");
-        if (updatedBy != null) {
-            obj.setUpdatedBy(updatedBy);
-        }
-
-        final String id = json.getString("_id");
+    protected void fromJson(JsonObject json) {
+        String id = json.getString("_id");
         if (id != null) {
-            this.set_id(id);
+            _id = id;
         }
     }
+
 }

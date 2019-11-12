@@ -14,6 +14,8 @@ public interface UserService {
 
     void get(JsonObject query, Handler<AsyncResult<User>> resultHandler);
 
+    void getById(String id, Handler<AsyncResult<User>> resultHandler);
+
     void login(String email, Handler<AsyncResult<User>> resultHandler);
 
     void put(String id, User user, Handler<AsyncResult<User>> resultHandler);

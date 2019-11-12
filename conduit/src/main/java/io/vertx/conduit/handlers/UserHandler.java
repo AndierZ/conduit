@@ -5,14 +5,12 @@ import io.vertx.conduit.entities.User;
 import io.vertx.conduit.services.UserService;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
-import io.vertx.core.http.HttpHeaders;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTOptions;
-import io.vertx.ext.jwt.JWT;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
 import logging.ContextLogger;
@@ -38,7 +36,7 @@ public class UserHandler extends BaseHandler {
 
     private void appendJwt(JsonObject user, String id) {
         JsonObject principal = new JsonObject();
-        principal.put("id", id);
+        principal.put("_id", id);
         principal.put("username", user.getString("username"));
         user.put("Bearer", jwtAuth.generateToken(principal, new JWTOptions().setExpiresInMinutes(120)));
     }
@@ -124,7 +122,7 @@ public class UserHandler extends BaseHandler {
 
     private static String getUserId(RoutingContext event) {
         if (event.user() != null && event.user().principal() != null) {
-            return event.user().principal().getString("id");
+            return event.user().principal().getString("_id");
         }
 
         return null;

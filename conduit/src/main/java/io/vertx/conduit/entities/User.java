@@ -77,16 +77,13 @@ public class User extends Base {
 
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
-        toBaseJson(this, json);
+        super.toJson(json);
         UserConverter.toJson(this, json);
         return json;
     }
 
-
-    private void fromJson(JsonObject jsonObject) {
-        // TODO validate json object. ensure correct format for certain fields (email)
-        // TODO how to enforce uniqueness based on username or id in the database?
-        fromBaseJson(jsonObject, this);
+    protected void fromJson(JsonObject jsonObject) {
+        super.fromJson(jsonObject);
         UserConverter.fromJson(jsonObject, this);
     }
 
