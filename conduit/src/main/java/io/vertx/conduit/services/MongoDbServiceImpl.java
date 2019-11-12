@@ -31,7 +31,11 @@ public class MongoDbServiceImpl implements MongoDbService {
         try {
             mongoClient.findOne(collection, query, fields, ar -> {
                 if (ar.succeeded()) {
-                    resultHandler.handle(Future.succeededFuture(ar.result()));
+                    if (ar.result() != null) {
+                        resultHandler.handle(Future.succeededFuture(ar.result()));
+                    }  else {
+                        resultHandler.handle(Future.failedFuture(new RuntimeException("Empty result set")));
+                    }
                 } else {
                     resultHandler.handle(Future.failedFuture(ar.cause()));
                 }
@@ -52,7 +56,12 @@ public class MongoDbServiceImpl implements MongoDbService {
         try {
             mongoClient.findWithOptions(collection, query, options, ar -> {
                 if (ar.succeeded()) {
-                    resultHandler.handle(Future.succeededFuture(ar.result()));
+                    if (ar.result() != null) {
+                        resultHandler.handle(Future.succeededFuture(ar.result()));
+                    } else {
+                        resultHandler.handle(Future.failedFuture(new RuntimeException("Empty result set")));
+                    }
+
                 } else {
                     resultHandler.handle(Future.failedFuture(ar.cause()));
                 }
