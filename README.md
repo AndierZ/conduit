@@ -17,15 +17,16 @@
 13. Move all user handlers into its own class
 14. Create annotation for configuring routes
 15. Add annotation process to reigster handlers to routes
+16. CRUD for user with authentication
 
-CRUD for user with authentication
-CRUD articles
-CRUD comments using RX2?
+CRUD articles using RxJava
+CRUD comments
 add follow/unfollow
 add favorite/unfavorite
 add tags
 add query routes
 
+look into using protobuf as customized codec for service proxy
 security review
 
 - Create docker for each separate each verticle as its own process/service
