@@ -12,12 +12,13 @@ import io.vertx.ext.web.handler.AuthHandler;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public final class HandlerProcessor {
 
     private static Logger LOGGER = ContextLogger.create();
 
-    public static <H, T extends Handler<RoutingContext>, K extends Handler<RoutingContext>> void buildHandler(final Router router, final T preHandler, final H handler, final AuthHandler authHandler, final K optionalAuthHandler) {
+    public static <H> void buildHandler(final Router router, final List<? extends Handler<RoutingContext>> preHandlers, final H handler, final AuthHandler authHandler) {
         Class<?> clazz = handler.getClass();
         RouteConfig baseRouteConfig = clazz.getAnnotation(RouteConfig.class);
         if (baseRouteConfig != null) {
@@ -26,34 +27,54 @@ public final class HandlerProcessor {
 
             String basePath = baseRouteConfig.path().length() != 0 ? baseRouteConfig.path() : "";
             Set<Method> methods = getMethodsAnnotatedWith(clazz, RouteConfig.class);
+            String[] baseMiddlewares = baseRouteConfig.middlewares();
+            List<Method> baseMiddlewareMethods = getMiddlewareMethods(clazz, baseMiddlewares);
+
             methods.forEach(method -> {
                 RouteConfig annotation = method.getAnnotation(RouteConfig.class);
                 String[] methodConsumes = annotation.consumes();
                 String[] methodProduces = annotation.produces();
                 String methodPath = annotation.path();
+                String[] middlewares = annotation.middlewares();
                 HttpMethod httpMethod = annotation.method();
                 boolean authRequired = annotation.authRequired();
+                List<Method> middlewareMethods = getMiddlewareMethods(clazz, middlewares);
 
                 String path = basePath + methodPath;
                 Route route = router.route(httpMethod, path);
                 setMediaType(route, methodConsumes.length != 0 ? methodConsumes : baseConsumes , false);
                 setMediaType(route, methodProduces.length != 0 ? methodProduces : baseProduces , true);
+
                 if (authRequired) {
                     if (authHandler == null) {
                         throw new IllegalArgumentException("authHandler must be specified when authRequired = true");
                     }
                     route.handler(authHandler);
-                } else {
-                    if (optionalAuthHandler != null) {
-                        route.handler(optionalAuthHandler);
-                    }
                 }
-                if (preHandler != null) {
-                    route.handler(preHandler);
+
+                if (preHandlers != null) {
+                    preHandlers.forEach(h -> route.handler(h));
                 }
+
+                baseMiddlewareMethods.forEach(m -> createHandler(handler, m, route));
+                middlewareMethods.forEach(m -> createHandler(handler, m, route));
+
                 createHandler(handler, method, route);
             });
         }
+    }
+
+    private static List<Method> getMiddlewareMethods(Class<?> clazz, String[] baseMiddlewares) {
+        return Arrays.asList(baseMiddlewares)
+                        .stream()
+                        .map(s -> {
+                            try {
+                                return clazz.getMethod(s, RoutingContext.class);
+                            } catch (NoSuchMethodException e) {
+                                throw new IllegalArgumentException("Middleware method not properly defined. Must take RoutingContext as argument");
+                            }
+                        })
+                        .collect(Collectors.toList());
     }
 
     private static <H> void createHandler(final H handler, final Method method, final Route route) {

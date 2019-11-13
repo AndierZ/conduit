@@ -28,7 +28,7 @@ public class ArticleServiceVerticle extends AbstractVerticle {
         ServiceDiscovery.create(vertx, discovery -> {
             binder = new ServiceBinder(vertx);
             // Create the services object
-            ArticleServiceImpl service = new ArticleServiceImpl();
+            ArticleServiceImpl service = new ArticleServiceImpl(vertx);
 
             // Register the services proxy on the event bus
             this.consumer = binder

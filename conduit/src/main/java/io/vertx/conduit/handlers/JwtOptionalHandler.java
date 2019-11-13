@@ -36,14 +36,17 @@ public class JwtOptionalHandler implements Handler<RoutingContext> {
 
     @Override
     public void handle(RoutingContext event) {
-        final String authorization = event.request().headers().get(HttpHeaders.AUTHORIZATION);
-        if (authorization != null) {
-            String[] tokens = authorization.split(" ");
-            if (tokens.length == 2) {
-                JsonObject payload = jwt.decode(tokens[1]);
-                event.setUser(new JWTUser(payload, permissionsClaimKey));
+        if (event.user() == null) {
+            final String authorization = event.request().headers().get(HttpHeaders.AUTHORIZATION);
+            if (authorization != null) {
+                String[] tokens = authorization.split(" ");
+                if (tokens.length == 2) {
+                    JsonObject payload = jwt.decode(tokens[1]);
+                    event.setUser(new JWTUser(payload, permissionsClaimKey));
+                }
             }
         }
+
         event.next();
     }
 }

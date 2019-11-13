@@ -19,4 +19,6 @@ public @interface RouteConfig {
 	String[] produces() default {};
 
 	boolean authRequired() default true;
+
+	String[] middlewares() default {};
 }
