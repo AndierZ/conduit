@@ -38,12 +38,14 @@ public class ArticleHandler extends BaseHandler {
     }
 
     @RouteConfig(path="/", method= HttpMethod.POST)
-    public void create(RoutingContext event){
+    public void create(RoutingContext event) {
         JsonObject message = event.getBodyAsJson().getJsonObject(ARTICLE);
         message.put("slug", slugify.slugify(message.getString("title")));
-        String userId = getUserId(event);
+        String userId = event.get("userId");
+        message.put("author", userId);
+
         if (userId != null) {
-            userService.get(new JsonObject().put("_id", getUserId(event)), ar -> {
+            userService.getById(event.get("userId"), ar -> {
                 if (ar.succeeded()) {
                     User user = ar.result();
                     message.put("author", user.toJson());
@@ -96,17 +98,4 @@ public class ArticleHandler extends BaseHandler {
     public void delete(){
 
     }
-
-    // TODO
-    // better way to do this. move to the base handler or? or event.put?
-    private static String getUserId(RoutingContext event) {
-        if (event.user() != null && event.user().principal() != null) {
-            return event.user().principal().getString("_id");
-        }
-
-        return null;
-    }
-
-    //TODO
-    //can we allow adding per class or per handler pre handlers?
 }

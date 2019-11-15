@@ -107,7 +107,7 @@ public class User extends Base {
         return retJson;
     }
 
-    public Object toProfileJsonFor(User user) {
+    public JsonObject toProfileJsonFor(User user) {
         JsonObject retJson = new JsonObject();
         retJson.put("bio", bio);
         retJson.put("image", image);

@@ -74,19 +74,19 @@ public class UserHandler extends BaseHandler {
     public void put(RoutingContext event) {
         JsonObject message = event.getBodyAsJson().getJsonObject(USER);
         User user = new User(message);
-        userService.put(getUserId(event), user, ar -> handle(event, ar));
+        userService.put(event.get("userId"), user, ar -> handle(event, ar));
     }
 
     @RouteConfig(path="/user")
     public void get(RoutingContext event) {
-        userService.get(new JsonObject().put("_id", getUserId(event)), ar -> handle(event, ar));
+        userService.getById(event.get("userId"), ar -> handle(event, ar));
     }
 
     @RouteConfig(path="/:username", authRequired = false)
     public void getProfile(RoutingContext event) {
 
         String username = event.request().getParam("username");
-        String queryingUserId = getUserId(event);
+        String queryingUserId = event.get("userId");
 
         if (queryingUserId != null) {
             userService.get(new JsonObject().put("_id", queryingUserId), ar -> {
@@ -116,16 +116,6 @@ public class UserHandler extends BaseHandler {
                 }
             });
         }
-
-
-    }
-
-    private static String getUserId(RoutingContext event) {
-        if (event.user() != null && event.user().principal() != null) {
-            return event.user().principal().getString("_id");
-        }
-
-        return null;
     }
 
     private void handle(RoutingContext event, AsyncResult<User> ar) {
