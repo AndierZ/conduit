@@ -39,23 +39,11 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public VertxCompletableFuture<Article> get(String slug) {
-
-        Future<Article> future = Future.future();
-
-        mongoDbService.findOne(COLLECTION, new JsonObject().put("slug", slug), null, ar -> {
-            if (ar.succeeded()) {
-                future.complete(new Article(ar.result()));
-            } else {
-                future.fail(ar.cause());
-            }
-        });
-
-        return VertxCompletableFuture.from(vertx, future);
+    public void get(String slug, Handler<AsyncResult<Article>> resultHandler) {
     }
 
     @Override
-    public void delete(String slug, Handler<AsyncResult> resultHandler) {
+    public void delete(String slug, Handler<AsyncResult<Article>> resultHandler) {
 
     }
 

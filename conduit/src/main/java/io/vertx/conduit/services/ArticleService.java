@@ -4,7 +4,6 @@ import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.conduit.entities.Article;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
-import me.escoffier.vertx.completablefuture.VertxCompletableFuture;
 
 @ProxyGen
 public interface ArticleService {
@@ -15,7 +14,7 @@ public interface ArticleService {
 
     void update(Article article, Handler<AsyncResult<Article>> resultHandler);
 
-    VertxCompletableFuture<Article> get(String slug);
+    void get(String slug, Handler<AsyncResult<Article>> resultHandler);
 
-    void delete(String slug, Handler<AsyncResult> resultHandler);
+    void delete(String slug, Handler<AsyncResult<Article>> resultHandler);
 }
