@@ -22,8 +22,8 @@ dependencies{
     compile group: 'io.vertx', name: 'vertx-auth-jwt'
     compile group: 'io.vertx', name: 'vertx-service-proxy'
     compile group: 'io.vertx', name: 'vertx-service-discovery'
-    compile group: 'com.github.slugify', name: 'slugify', version: '2.2'
     compile group: 'me.escoffier.vertx', name: 'vertx-completable-future', version: '0.1.2'
+    compile group: 'com.github.slugify', name: 'slugify', version: '2.2'
     compile group: 'org.springframework.security', name: 'spring-security-crypto', version: '3.1.0.RELEASE'
     compileOnly group: 'io.vertx', name: 'vertx-codegen'
     compile project (':common')

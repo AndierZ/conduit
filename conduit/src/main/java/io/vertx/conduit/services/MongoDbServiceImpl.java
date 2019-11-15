@@ -27,15 +27,11 @@ public class MongoDbServiceImpl implements MongoDbService {
     }
 
     @Override
-    public MongoDbService findOne(String collection, JsonObject query, JsonObject fields, Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void findOne(String collection, JsonObject query, JsonObject fields, Handler<AsyncResult<JsonObject>> resultHandler) {
         try {
             mongoClient.findOne(collection, query, fields, ar -> {
                 if (ar.succeeded()) {
-                    if (ar.result() != null) {
-                        resultHandler.handle(Future.succeededFuture(ar.result()));
-                    }  else {
-                        resultHandler.handle(Future.failedFuture(new RuntimeException("Empty result set")));
-                    }
+                    resultHandler.handle(Future.succeededFuture(ar.result()));
                 } else {
                     resultHandler.handle(Future.failedFuture(ar.cause()));
                 }
@@ -43,25 +39,19 @@ public class MongoDbServiceImpl implements MongoDbService {
         } catch (Exception e) {
             resultHandler.handle(Future.failedFuture(e));
         }
-        return this;
     }
 
     @Override
-    public MongoDbService findById(String collection, String id, JsonObject fields, Handler<AsyncResult<JsonObject>> resultHandler) {
-        return findOne(collection, new JsonObject().put("_id", id), fields, resultHandler);
+    public void findById(String collection, String id, JsonObject fields, Handler<AsyncResult<JsonObject>> resultHandler) {
+        findOne(collection, new JsonObject().put("_id", id), fields, resultHandler);
     }
 
     @Override
-    public MongoDbService find(String collection, JsonObject query, FindOptions options, Handler<AsyncResult<List<JsonObject>>> resultHandler) {
+    public void find(String collection, JsonObject query, FindOptions options, Handler<AsyncResult<List<JsonObject>>> resultHandler) {
         try {
             mongoClient.findWithOptions(collection, query, options, ar -> {
                 if (ar.succeeded()) {
-                    if (ar.result() != null) {
-                        resultHandler.handle(Future.succeededFuture(ar.result()));
-                    } else {
-                        resultHandler.handle(Future.failedFuture(new RuntimeException("Empty result set")));
-                    }
-
+                    resultHandler.handle(Future.succeededFuture(ar.result()));
                 } else {
                     resultHandler.handle(Future.failedFuture(ar.cause()));
                 }
@@ -70,12 +60,10 @@ public class MongoDbServiceImpl implements MongoDbService {
         } catch (Exception e) {
             resultHandler.handle(Future.failedFuture(e));
         }
-
-        return this;
     }
 
     @Override
-    public MongoDbService insertOne(String collection, JsonObject document, Handler<AsyncResult<String>> resultHandler) {
+    public void insertOne(String collection, JsonObject document, Handler<AsyncResult<String>> resultHandler) {
         try {
             mongoClient.insert(collection, document, ar -> {
                 if (ar.succeeded()) {
@@ -87,12 +75,10 @@ public class MongoDbServiceImpl implements MongoDbService {
         } catch (Exception e) {
             resultHandler.handle(Future.failedFuture(e));
         }
-
-        return this;
     }
 
     @Override
-    public MongoDbService upsert(String collection, JsonObject query, JsonObject update, UpdateOptions options, Handler<AsyncResult<MongoClientUpdateResult>> resultHandler) {
+    public void upsert(String collection, JsonObject query, JsonObject update, UpdateOptions options, Handler<AsyncResult<MongoClientUpdateResult>> resultHandler) {
         try {
             mongoClient.updateCollectionWithOptions(collection, query, update, options, ar -> {
                 if (ar.succeeded()) {
@@ -104,11 +90,10 @@ public class MongoDbServiceImpl implements MongoDbService {
         } catch (Exception e) {
             resultHandler.handle(Future.failedFuture(e));
         }
-        return this;
     }
 
     @Override
-    public MongoDbService findOneAndUpdate(String collection, JsonObject query, JsonObject update, FindOptions findOptions, UpdateOptions updateOptions, Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void findOneAndUpdate(String collection, JsonObject query, JsonObject update, FindOptions findOptions, UpdateOptions updateOptions, Handler<AsyncResult<JsonObject>> resultHandler) {
         try {
             mongoClient.findOneAndUpdateWithOptions(collection, query, update, findOptions, updateOptions, ar -> {
                 if (ar.succeeded()) {
@@ -120,23 +105,21 @@ public class MongoDbServiceImpl implements MongoDbService {
         } catch (Exception e) {
             resultHandler.handle(Future.failedFuture(e));
         }
-        return this;
     }
 
     @Override
-    public MongoDbService findOneAndReplace(String collection, JsonObject query, JsonObject update, FindOptions findOptions, UpdateOptions updateOptions, Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void findOneAndReplace(String collection, JsonObject query, JsonObject update, FindOptions findOptions, UpdateOptions updateOptions, Handler<AsyncResult<JsonObject>> resultHandler) {
         try {
-          mongoClient.findOneAndReplaceWithOptions(collection, query, update, findOptions, updateOptions, ar -> {
-              if (ar.succeeded()) {
-                  resultHandler.handle(Future.succeededFuture(ar.result()));
-              } else {
-                  resultHandler.handle(Future.failedFuture(ar.cause()));
-              }
-          });
+            mongoClient.findOneAndReplaceWithOptions(collection, query, update, findOptions, updateOptions, ar -> {
+                if (ar.succeeded()) {
+                    resultHandler.handle(Future.succeededFuture(ar.result()));
+                } else {
+                    resultHandler.handle(Future.failedFuture(ar.cause()));
+                }
+            });
         } catch (Exception e) {
             resultHandler.handle(Future.failedFuture(e));
         }
-        return this;
     }
 
     @Override

@@ -2,14 +2,11 @@ package io.vertx.conduit.services;
 
 import io.vertx.conduit.entities.Article;
 import io.vertx.core.AsyncResult;
-import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
-import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.FindOptions;
 import io.vertx.ext.mongo.UpdateOptions;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
-import me.escoffier.vertx.completablefuture.VertxCompletableFuture;
 
 public class ArticleServiceImpl implements ArticleService {
 

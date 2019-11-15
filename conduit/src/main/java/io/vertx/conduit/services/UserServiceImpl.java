@@ -20,59 +20,60 @@ public class UserServiceImpl implements UserService {
     private static final String USER_COLLECTION = "users";
 
     // active user being processed
-    private final MongoDbService mongoDbService;
+    private final MongoDbServiceWrapper mongoDbService;
     private final FindOptions findOptions;
     private final UpdateOptions updateOptions;
 
     public UserServiceImpl(Vertx vertx) {
-        ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(MongoDbService.ADDRESS);
-        this.mongoDbService = builder.build(MongoDbService.class);
+        this.mongoDbService = new MongoDbServiceWrapper(vertx);
         this.findOptions = new FindOptions();
         this.updateOptions = new UpdateOptions().setUpsert(true);
     }
 
     @Override
     public void register(User user, Handler<AsyncResult<User>> resultHandler) {
-        mongoDbService.insertOne(USER_COLLECTION, user.toJson(), ar -> {
-            if (ar.succeeded()) {
-                user.set_id(ar.result());
-                resultHandler.handle(Future.succeededFuture(user));
-            } else {
-                resultHandler.handle(Future.failedFuture(ar.cause()));
-            }
-        });
+        mongoDbService.insertOne(USER_COLLECTION, user.toJson())
+                .whenComplete((res, ex) -> {
+                   if (ex == null) {
+                       user.set_id(res);
+                       resultHandler.handle(Future.succeededFuture(user));
+                   } else {
+                       resultHandler.handle(Future.failedFuture(ex));
+                   }
+                });
     }
 
     @Override
-    public void login(String email, Handler<AsyncResult<User>> resultHandler) {
-        mongoDbService.findOne(USER_COLLECTION, new JsonObject().put("email", email), null, ar -> handleUser(resultHandler, ar));
+    public void getByEmail(String email, Handler<AsyncResult<User>> resultHandler) {
+        mongoDbService.findOne(USER_COLLECTION, new JsonObject().put("email", email), null)
+                      .whenComplete((res, ex) -> handleComplete(resultHandler, res, ex));
+    }
+
+    private static void handleComplete(Handler<AsyncResult<User>> resultHandler, JsonObject res, Throwable ex) {
+        if (ex == null) {
+            resultHandler.handle(Future.succeededFuture(new User(res)));
+        } else {
+            resultHandler.handle(Future.failedFuture(ex));
+        }
     }
 
     @Override
     public void get(JsonObject query, Handler<AsyncResult<User>> resultHandler) {
-
-        mongoDbService.findOne(USER_COLLECTION, query, null, ar -> handleUser(resultHandler, ar));
+        mongoDbService.findOne(USER_COLLECTION, query, null)
+                      .whenComplete((res, ex) -> handleComplete(resultHandler, res, ex));;
     }
 
     @Override
     public void getById(String id, Handler<AsyncResult<User>> resultHandler) {
-
-        mongoDbService.findById(USER_COLLECTION, id, null, ar -> handleUser(resultHandler, ar));
+        mongoDbService.findById(USER_COLLECTION, id, null)
+                      .whenComplete((res, ex) -> handleComplete(resultHandler, res, ex));
     }
 
     @Override
     public void put(String id, User user, Handler<AsyncResult<User>> resultHandler) {
         // Have to filter on all unique fields for mongodb to replace the document instead of inserting a new one
-        mongoDbService.findOneAndReplace(USER_COLLECTION, new JsonObject().put("_id", id).put("email", user.getEmail()).put("username", user.getUsername()), user.toJson(), findOptions, updateOptions, ar -> handleUser(resultHandler, ar));
-    }
-
-    private void handleUser(Handler<AsyncResult<User>> resultHandler, AsyncResult<JsonObject> ar) {
-        if (ar.succeeded()) {
-            User user = new User(ar.result());
-            resultHandler.handle(Future.succeededFuture(user));
-        } else {
-            resultHandler.handle(Future.failedFuture(ar.cause()));
-        }
+        mongoDbService.findOneAndReplace(USER_COLLECTION, new JsonObject().put("_id", id).put("email", user.getEmail()).put("username", user.getUsername()), user.toJson(), findOptions, updateOptions)
+                      .whenComplete((res, ex) -> handleComplete(resultHandler, res, ex));
     }
 
     private JsonObject toJsonFor(User user) {

@@ -16,7 +16,7 @@ public interface UserService {
 
     void getById(String id, Handler<AsyncResult<User>> resultHandler);
 
-    void login(String email, Handler<AsyncResult<User>> resultHandler);
+    void getByEmail(String email, Handler<AsyncResult<User>> resultHandler);
 
     void put(String id, User user, Handler<AsyncResult<User>> resultHandler);
 }
