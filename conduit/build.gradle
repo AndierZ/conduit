@@ -23,6 +23,7 @@ dependencies{
     compile group: 'io.vertx', name: 'vertx-service-proxy'
     compile group: 'io.vertx', name: 'vertx-service-discovery'
     compile group: 'io.vertx', name: 'vertx-rx-java2'
+    compile group: 'io.vertx', name: 'vertx-rx-java2-gen', version: '3.8.3'
     compile group: 'com.github.slugify', name: 'slugify', version: '2.2'
     compile group: 'org.springframework.security', name: 'spring-security-crypto', version: '3.1.0.RELEASE'
     compileOnly group: 'io.vertx', name: 'vertx-codegen'

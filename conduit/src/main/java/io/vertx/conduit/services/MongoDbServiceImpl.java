@@ -28,7 +28,7 @@ public class MongoDbServiceImpl implements MongoDbService {
     }
 
     @Override
-    public MongoDbService findOne(final String collection, final JsonObject query, final JsonObject fields, final Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void findOne(final String collection, final JsonObject query, final JsonObject fields, final Handler<AsyncResult<JsonObject>> resultHandler) {
         try {
             client.rxFindOne(collection, query, fields).subscribe(resp -> {
                 resultHandler.handle(Future.succeededFuture(resp));
@@ -38,16 +38,15 @@ public class MongoDbServiceImpl implements MongoDbService {
         } catch (Exception ex) {
             resultHandler.handle(Future.failedFuture(ex));
         }
-        return this;
     }
 
     @Override
-    public MongoDbService findById(final String collection, final String id, final JsonObject fields, final Handler<AsyncResult<JsonObject>> resultHandler) {
-        return findOne(collection, new JsonObject().put("_id", id), fields, resultHandler);
+    public void findById(final String collection, final String id, final JsonObject fields, final Handler<AsyncResult<JsonObject>> resultHandler) {
+        findOne(collection, new JsonObject().put("_id", id), fields, resultHandler);
     }
 
     @Override
-    public MongoDbService find(final String collection, final JsonObject query, final FindOptions options, Handler<AsyncResult<List<JsonObject>>> resultHandler) {
+    public void find(final String collection, final JsonObject query, final FindOptions options, Handler<AsyncResult<List<JsonObject>>> resultHandler) {
         try {
             client.rxFindWithOptions(collection, query, options).subscribe(resp -> {
                 resultHandler.handle(Future.succeededFuture(resp));
@@ -57,15 +56,10 @@ public class MongoDbServiceImpl implements MongoDbService {
         } catch (Exception ex) {
             resultHandler.handle(Future.failedFuture(ex));
         }
-        return this;
-    }
-
-    public Maybe<Optional<JsonObject>> rxFindOne(final String collection, final JsonObject query, final JsonObject fields) {
-        return client.rxFindOne(collection, query, fields).map(Optional::of);
     }
 
     @Override
-    public MongoDbService insertOne(final String collection, final JsonObject document, final Handler<AsyncResult<String>> resultHandler) {
+    public void insertOne(final String collection, final JsonObject document, final Handler<AsyncResult<String>> resultHandler) {
         try {
             client.rxInsert(collection, document).subscribe(resp -> {
                 resultHandler.handle(Future.succeededFuture(resp));
@@ -80,12 +74,11 @@ public class MongoDbServiceImpl implements MongoDbService {
         } catch (Exception ex) {
             resultHandler.handle(Future.failedFuture(ex));
         }
-        return this;
     }
 
     @Override
 
-    public MongoDbService upsert(final String collection, final JsonObject query, final JsonObject toUpdate, final UpdateOptions options, Handler<AsyncResult<MongoClientUpdateResult>> resultHandler) {
+    public void upsert(final String collection, final JsonObject query, final JsonObject toUpdate, final UpdateOptions options, Handler<AsyncResult<MongoClientUpdateResult>> resultHandler) {
         try {
             client.rxUpdateCollectionWithOptions(collection, query, toUpdate, options).subscribe(resp -> {
                 resultHandler.handle(Future.succeededFuture(resp));
@@ -95,11 +88,10 @@ public class MongoDbServiceImpl implements MongoDbService {
         } catch (Exception ex) {
             resultHandler.handle(Future.failedFuture(ex));
         }
-        return this;
     }
 
     @Override
-    public MongoDbService findOneAndUpdate(final String collection, final JsonObject query, final JsonObject toUpdate, final FindOptions findOptions, final UpdateOptions updateOptions, final Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void findOneAndUpdate(final String collection, final JsonObject query, final JsonObject toUpdate, final FindOptions findOptions, final UpdateOptions updateOptions, final Handler<AsyncResult<JsonObject>> resultHandler) {
         try {
             client.rxFindOneAndUpdateWithOptions(collection, query, toUpdate, findOptions, updateOptions).subscribe(resp -> {
                 resultHandler.handle(Future.succeededFuture(resp));
@@ -109,11 +101,10 @@ public class MongoDbServiceImpl implements MongoDbService {
         } catch (Exception ex) {
             resultHandler.handle(Future.failedFuture(ex));
         }
-        return this;
     }
 
     @Override
-    public MongoDbService findOneAndReplace(final String collection, final JsonObject query, final JsonObject toUpdate, final FindOptions findOptions, final UpdateOptions updateOptions, final Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void findOneAndReplace(final String collection, final JsonObject query, final JsonObject toUpdate, final FindOptions findOptions, final UpdateOptions updateOptions, final Handler<AsyncResult<JsonObject>> resultHandler) {
         try {
             client.rxFindOneAndReplaceWithOptions(collection, query, toUpdate, findOptions, updateOptions).subscribe(resp -> {
                 resultHandler.handle(Future.succeededFuture(resp));
@@ -123,7 +114,6 @@ public class MongoDbServiceImpl implements MongoDbService {
         } catch (Exception ex) {
             resultHandler.handle(Future.failedFuture(ex));
         }
-        return this;
     }
 
     @Override
