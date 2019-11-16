@@ -3,7 +3,6 @@ package io.vertx.conduit.handlers;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.conduit.entities.User;
 import io.vertx.conduit.services.UserService;
-import io.vertx.core.AsyncResult;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
@@ -17,8 +16,6 @@ import logging.ContextLogger;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import routerutils.BaseHandler;
 import routerutils.RouteConfig;
-
-import java.util.List;
 
 @RouteConfig(path="/api", produces = "application/json")
 public class UserHandler extends BaseHandler {
@@ -112,18 +109,15 @@ public class UserHandler extends BaseHandler {
         String username = event.request().getParam("username");
         String queryingUserId = event.get("userId");
         if (queryingUserId != null) {
+
             userService.rxGetById(queryingUserId)
-                    .mergeWith(userService.rxGet(new JsonObject().put("username", username)))
-                    .toList()
-                    .map(list -> {
-                        User queryingUser = list.get(0);
-                        User user = list.get(1);
-                        handleResponse(event, user.toProfileJsonFor(queryingUser), null, HttpResponseStatus.OK);
-                        return 0;
-                    });
+                       .zipWith(userService.rxGet(new JsonObject().put("username", username)), (queryingUser, user) -> user.toProfileJsonFor(queryingUser))
+                       .subscribe((json, ex) -> handleResponse(event, json, ex, HttpResponseStatus.OK));
+
         } else {
             userService.rxGet(new JsonObject().put("username", username))
-                    .subscribe((res, ex) -> handleResponse(event, res.toAuthJson(), ex, HttpResponseStatus.OK));
+                    .map(user -> user.toProfileJsonFor(null))
+                    .subscribe((json, ex) -> handleResponse(event, json, ex, HttpResponseStatus.OK));
         }
     }
 }

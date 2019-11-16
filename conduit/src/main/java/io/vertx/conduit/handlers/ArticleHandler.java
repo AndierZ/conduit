@@ -72,18 +72,18 @@ public class ArticleHandler extends BaseHandler {
     }
 
     public void extractArticle(RoutingContext event) {
-        String slug = event.request().getParam("slug");
-        articleService.get(slug)
-                .thenApply(a -> a.toJson())
-                .whenComplete((res, e) -> {
-                    if (e != null) {
-                        event.fail(e);
-                    } else {
-                        event.response()
-                                .setStatusCode(HttpResponseStatus.CREATED.code())
-                                .end(Json.encodePrettily(res));
-                    }
-                });
+//        String slug = event.request().getParam("slug");
+//        articleService.get(slug)
+//                .thenApply(a -> a.toJson())
+//                .whenComplete((res, e) -> {
+//                    if (e != null) {
+//                        event.fail(e);
+//                    } else {
+//                        event.response()
+//                                .setStatusCode(HttpResponseStatus.CREATED.code())
+//                                .end(Json.encodePrettily(res));
+//                    }
+//                });
     }
 
     @RouteConfig(path="/:slug", method=HttpMethod.GET, middlewares = {"extractArticle"})

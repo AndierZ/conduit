@@ -10,7 +10,7 @@ import io.vertx.core.Handler;
 @ProxyGen
 public interface ArticleService {
 
-    public String ADDRESS = ArticleService.class.getName();
+    String ADDRESS = ArticleService.class.getName();
 
     void create(Article article, Handler<AsyncResult<Article>> resultHandler);
 
