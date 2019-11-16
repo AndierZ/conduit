@@ -41,26 +41,9 @@ public class UserHandler extends BaseHandler {
         user.put("Bearer", jwtAuth.generateToken(principal, new JWTOptions().setExpiresInMinutes(120)));
     }
 
-    @RouteConfig(path="/users/getByEmail", method=HttpMethod.POST, authRequired=false)
+    @RouteConfig(path="/users/login", method=HttpMethod.POST, authRequired=false)
     public void login(RoutingContext event) {
         JsonObject message = event.getBodyAsJson().getJsonObject(USER);
-        userService.getByEmail(message.getString("email"), ar -> {
-            if (ar.succeeded()) {
-                String hashed = ar.result().getPasswordHash();
-                if (BCrypt.checkpw(message.getString("password"), hashed)) {
-                    JsonObject userAuthJson = ar.result().toAuthJson();
-                    appendJwt(userAuthJson, ar.result().get_id());
-                    event.response()
-                            .setStatusCode(HttpResponseStatus.CREATED.code())
-                            .end(Json.encodePrettily(userAuthJson));
-                } else {
-                    event.fail(new RuntimeException("Invalid user credentials"));
-                }
-            } else {
-                event.fail(ar.cause());
-            }
-        });
-
         userService.rxGetByEmail(message.getString("email"))
                 .subscribe((res, ex) -> {
                     if (ex != null) {
@@ -86,7 +69,7 @@ public class UserHandler extends BaseHandler {
         User user = new User(message);
         user.setPassword(message.getString("password"));
         userService.rxRegister(user)
-                .subscribe((res, ex) -> handleResponse(event, res.toAuthJson(), ex, HttpResponseStatus.CREATED));
+                .subscribe((res, ex) -> handleResponse(event, res.toAuthJson(), ex, HttpResponseStatus.OK));
     }
 
     @RouteConfig(path="/user", method = HttpMethod.POST)

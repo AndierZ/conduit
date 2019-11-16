@@ -2,12 +2,12 @@ package io.vertx.conduit.verticles;
 
 import io.vertx.conduit.services.MongoDbService;
 import io.vertx.conduit.services.MongoDbServiceImpl;
-import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
-import io.vertx.ext.mongo.MongoClient;
+import io.vertx.reactivex.core.AbstractVerticle;
+import io.vertx.reactivex.ext.mongo.MongoClient;
 import io.vertx.servicediscovery.Record;
 import io.vertx.servicediscovery.ServiceDiscovery;
 import io.vertx.servicediscovery.types.EventBusService;
@@ -24,9 +24,10 @@ public class MongoDbServiceVerticle extends AbstractVerticle {
 
     @Override
     public void start(Future<Void> startFuture) {
+
         final MongoClient mongoClient = MongoClient.createShared(vertx, config().getJsonObject("mongodb"));
-        ServiceDiscovery.create(vertx, discovery -> {
-            binder = new ServiceBinder(vertx);
+        ServiceDiscovery.create(vertx.getDelegate(), discovery -> {
+            binder = new ServiceBinder(vertx.getDelegate());
             // Create the services object
             new MongoDbServiceImpl(mongoClient, ready -> {
                 if (ready.succeeded()) {

@@ -1,7 +1,6 @@
 package io.vertx.conduit.services;
 
 import com.mongodb.MongoWriteException;
-import io.reactivex.Maybe;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -12,7 +11,6 @@ import io.vertx.ext.mongo.UpdateOptions;
 import io.vertx.reactivex.ext.mongo.MongoClient;
 
 import java.util.List;
-import java.util.Optional;
 
 public class MongoDbServiceImpl implements MongoDbService {
 
@@ -61,6 +59,8 @@ public class MongoDbServiceImpl implements MongoDbService {
     @Override
     public void insertOne(final String collection, final JsonObject document, final Handler<AsyncResult<String>> resultHandler) {
         try {
+            // make sure _id field doesn't exist to force database create one
+            document.remove("_id");
             client.rxInsert(collection, document).subscribe(resp -> {
                 resultHandler.handle(Future.succeededFuture(resp));
             }, cause -> {

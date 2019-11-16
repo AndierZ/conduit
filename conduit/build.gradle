@@ -43,8 +43,7 @@ task generate(type: JavaCompile, group: 'build') {
     options.annotationProcessorPath = configurations.compile + configurations.compileOnly
     options.compilerArgs = [
             "-proc:only",
-            "-processor", "io.vertx.codegen.CodeGenProcessor",
-            "-AoutputDirectory=${destinationDir.absolutePath}"
+            "-processor", "io.vertx.codegen.CodeGenProcessor"
     ]
 }
 
