@@ -4,17 +4,24 @@ import io.vertx.conduit.entities.Article;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.ext.mongo.FindOptions;
+import io.vertx.ext.mongo.UpdateOptions;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
 
 public class ArticleServiceImpl implements ArticleService {
 
     private static final String COLLECTION = "articles";
 
-    private final Vertx vertx;
+    private final io.vertx.conduit.services.reactivex.MongoDbService mongoDbService;
+    private final FindOptions findOptions;
+    private final UpdateOptions updateOptions;
 
     public ArticleServiceImpl(Vertx vertx){
-        this.vertx = vertx;
         ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(MongoDbService.ADDRESS);
+        MongoDbService delegate = builder.build(MongoDbService.class);
+        this.mongoDbService = new io.vertx.conduit.services.reactivex.MongoDbService(delegate);
+        this.findOptions = new FindOptions();
+        this.updateOptions = new UpdateOptions().setUpsert(true);
     }
 
     @Override

@@ -12,7 +12,7 @@ import io.vertx.core.json.JsonObject;
 public interface UserService {
     String ADDRESS = UserService.class.getName();
 
-    void register(User user, Handler<AsyncResult<User>> resultHandler);
+    void create(User user, Handler<AsyncResult<User>> resultHandler);
 
     void get(JsonObject query, Handler<AsyncResult<User>> resultHandler);
 
@@ -20,5 +20,5 @@ public interface UserService {
 
     void getByEmail(String email, Handler<AsyncResult<User>> resultHandler);
 
-    void put(String id, User user, Handler<AsyncResult<User>> resultHandler);
+    void update(String id, User user, Handler<AsyncResult<User>> resultHandler);
 }

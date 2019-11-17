@@ -47,7 +47,7 @@ public class JwtOptionalHandler implements Handler<RoutingContext> {
             }
         }
 
-        if (event.user() != null) {
+        if (event.user() != null && event.user().principal() != null) {
             event.put("userId", event.user().principal().getString("_id"));
         } else {
             event.put("userId", null);

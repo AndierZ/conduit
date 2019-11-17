@@ -104,7 +104,7 @@ public class Article extends Base {
         ArticleConverter.fromJson(jsonObject, this);
     }
 
-    public JsonObject toJsonForUser(User user) {
+    public JsonObject toJsonFor(User user) {
         JsonObject json = toJson();
         json.put("author", author.toProfileJsonFor(user));
         return json;

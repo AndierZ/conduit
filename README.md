@@ -18,17 +18,18 @@
 14. Create annotation for configuring routes
 15. Add annotation process to reigster handlers to routes
 16. CRUD for user with authentication
+17. Rxify the MongoDb service and User service.
 
-CRUD articles using RxJava
+CRUD articles
 CRUD comments
 add follow/unfollow
 add favorite/unfavorite
 add tags
 add query routes
+better deal with event.fail(e), instead of just showing internal server error?
 
 look into using protobuf as customized codec for service proxy
 security review
-
-- Create docker for each separate each verticle as its own process/service
-- Run each docker/service independently on a cluster
-- Add load balancer in front of the http verticles
+Create docker for each separate each verticle as its own process/service
+Run each docker/service independently on a cluster
+Add load balancer in front of the http verticles
