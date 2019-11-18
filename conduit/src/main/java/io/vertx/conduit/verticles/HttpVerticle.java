@@ -1,5 +1,6 @@
 package io.vertx.conduit.verticles;
 
+import io.vertx.conduit.handlers.ArticleHandler;
 import io.vertx.conduit.handlers.JwtOptionalHandler;
 import logging.ContextLogger;
 import io.vertx.conduit.handlers.UserHandler;
@@ -41,6 +42,7 @@ public class HttpVerticle extends AbstractVerticle {
                 .addPreHandler(BodyHandler.create())
                 .addPreHandler(new JwtOptionalHandler(jwtAuthOptions))
                 .add(new UserHandler(vertx, jwtAuth))
+                .add(new ArticleHandler(vertx))
                 .build();
 
         vertx.createHttpServer()

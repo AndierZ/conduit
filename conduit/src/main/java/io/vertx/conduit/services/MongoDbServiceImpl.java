@@ -6,6 +6,7 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.FindOptions;
+import io.vertx.ext.mongo.MongoClientDeleteResult;
 import io.vertx.ext.mongo.MongoClientUpdateResult;
 import io.vertx.ext.mongo.UpdateOptions;
 import io.vertx.reactivex.ext.mongo.MongoClient;
@@ -107,6 +108,19 @@ public class MongoDbServiceImpl implements MongoDbService {
     public void findOneAndReplace(final String collection, final JsonObject query, final JsonObject toUpdate, final FindOptions findOptions, final UpdateOptions updateOptions, final Handler<AsyncResult<JsonObject>> resultHandler) {
         try {
             client.rxFindOneAndReplaceWithOptions(collection, query, toUpdate, findOptions, updateOptions).subscribe(resp -> {
+                resultHandler.handle(Future.succeededFuture(resp));
+            }, cause -> {
+                resultHandler.handle(Future.failedFuture(cause));
+            });
+        } catch (Exception ex) {
+            resultHandler.handle(Future.failedFuture(ex));
+        }
+    }
+
+    @Override
+    public void delete(final String collection, final JsonObject query, Handler<AsyncResult<MongoClientDeleteResult>> resultHandler){
+        try {
+            client.rxRemoveDocuments(collection, query).subscribe(resp -> {
                 resultHandler.handle(Future.succeededFuture(resp));
             }, cause -> {
                 resultHandler.handle(Future.failedFuture(cause));

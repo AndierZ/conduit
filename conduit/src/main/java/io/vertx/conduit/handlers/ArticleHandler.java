@@ -29,7 +29,7 @@ public class ArticleHandler extends BaseHandler {
     private final Slugify slugify;
     private final io.vertx.conduit.services.reactivex.UserService userService;
 
-    protected ArticleHandler(Vertx vertx) {
+    public ArticleHandler(Vertx vertx) {
         super(vertx);
         {
             ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(ArticleService.ADDRESS);
@@ -38,7 +38,7 @@ public class ArticleHandler extends BaseHandler {
         }
 
         {
-            ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(ArticleService.ADDRESS);
+            ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(UserService.ADDRESS);
             UserService delegate = builder.build(UserService.class);
             this.userService = new io.vertx.conduit.services.reactivex.UserService(delegate);
         }
@@ -46,21 +46,14 @@ public class ArticleHandler extends BaseHandler {
         this.slugify = new Slugify();
     }
 
-    public void slugify(RoutingContext event) {
-        JsonObject message = event.getBodyAsJson().getJsonObject(ARTICLE);
-        if (message.getString("slugify") == null) {
-            message.put("slug", slugify.slugify(message.getString("title")));
-        }
-        event.next();
-    }
-
-    @RouteConfig(path="/", method= HttpMethod.POST, middlewares = "slugify")
+    @RouteConfig(path="/", method= HttpMethod.POST)
     public void create(RoutingContext event) {
         String userId = event.get("userId");
 
         if (userId != null) {
             JsonObject message = event.getBodyAsJson().getJsonObject(ARTICLE);
             message.put("author", userId);
+            message.put("slug", slugify.slugify(message.getString("title")));
             // TODO what's the use of setting the user field here.
             // see how this will get written in the database
             // why don't we just keep a user id as reference?
@@ -77,7 +70,9 @@ public class ArticleHandler extends BaseHandler {
                                              }
                                          });
                        })
-                       .doOnError(e -> event.fail(e))
+                       .doOnError(e -> {
+                           event.fail(e);
+                       })
                        .subscribe();
         } else {
             event.fail(new RuntimeException("Unauthorized"));

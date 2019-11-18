@@ -68,7 +68,7 @@ public class UserHandler extends BaseHandler {
         JsonObject message = event.getBodyAsJson().getJsonObject(USER);
         User user = new User(message);
         user.setPassword(message.getString("password"));
-        userService.rxRegister(user)
+        userService.rxCreate(user)
                 .subscribe((res, ex) -> handleResponse(event, res.toAuthJson(), ex, HttpResponseStatus.OK));
     }
 
@@ -76,7 +76,7 @@ public class UserHandler extends BaseHandler {
     public void put(RoutingContext event) {
         JsonObject message = event.getBodyAsJson().getJsonObject(USER);
         User user = new User(message);
-        userService.rxPut(event.get("userId"), user)
+        userService.rxUpdate(event.get("userId"), user)
                 .subscribe((res, ex) -> handleResponse(event, res.toAuthJson(), ex, HttpResponseStatus.OK));
     }
 
