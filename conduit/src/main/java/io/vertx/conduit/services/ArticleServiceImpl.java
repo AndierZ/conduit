@@ -54,11 +54,11 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public void delete(String slug, Handler<AsyncResult<Article>> resultHandler) {
+    public void delete(String slug, Handler<AsyncResult<Void>> resultHandler) {
         mongoDbService.rxDelete(ARTICLE_COLLECTION, new JsonObject().put("slug", slug))
                 .subscribe((res, ex) -> {
                     if (ex == null) {
-//                        resultHandler.handle(Future.succeededFuture(res.toJson()));
+                        resultHandler.handle(Future.succeededFuture());
                     } else {
                         resultHandler.handle(Future.failedFuture(ex));
                     }

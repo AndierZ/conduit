@@ -46,63 +46,40 @@ public class ArticleHandler extends BaseHandler {
         this.slugify = new Slugify();
     }
 
-    @RouteConfig(path="/", method= HttpMethod.POST)
-    public void create(RoutingContext event) {
-        String userId = event.get("userId");
-
-        if (userId != null) {
-            JsonObject message = event.getBodyAsJson().getJsonObject(ARTICLE);
-            message.put("author", userId);
-            message.put("slug", slugify.slugify(message.getString("title")));
-            // TODO what's the use of setting the user field here.
-            // see how this will get written in the database
-            // why don't we just keep a user id as reference?
-            userService.rxGetById(userId)
-                       .doOnSuccess(user -> {
-                           articleService.rxCreate(new Article(message.put("author", user.toJson())))
-                                         .subscribe((article, e) -> {
-                                             if (e == null) {
-                                                 event.response()
-                                                         .setStatusCode(HttpResponseStatus.CREATED.code())
-                                                         .end(Json.encodePrettily(article.toJsonFor(user)));
-                                             } else {
-                                                 event.fail(e);
-                                             }
-                                         });
-                       })
-                       .doOnError(e -> {
-                           event.fail(e);
-                       })
-                       .subscribe();
-        } else {
-            event.fail(new RuntimeException("Unauthorized"));
-        }
-    }
-
-    public void extractArticle(RoutingContext event) {
+    public void extractArticleAndUser(RoutingContext event) {
         String slug = event.request().getParam("article");
-        articleService.rxGet(slug)
-                .subscribe((res, e) -> {
-                    if (e == null) {
-                        event.put("article", res);
-                        event.next();
-                    } else {
-                        event.fail(e);
-                    }
-                });
 
-        userService.rxGet(event.get("userId"))
-                   .subscribe((res, e) -> {
-                        if (e == null) {
-                            event.put("user", res);
-                            event.next();
-                        } else {
-                            event.fail(e);
-                        }
-                   });
+        articleService.rxGet(slug)
+                .zipWith(userService.rxGet(event.get("userId")), (article, user) -> {
+                    event.put("article", article);
+                    event.put("user", user);
+                    return null;
+                })
+                .doOnError(event::fail)
+                .doOnSuccess(res -> event.next())
+                .subscribe();
     }
 
-    @RouteConfig(path="/:article", method=HttpMethod.GET, middlewares = "extractArticle")
+    @RouteConfig(path="/", method= HttpMethod.POST, middlewares = "extractArticleAndUser")
+    public void create(RoutingContext event) {
+        JsonObject message = event.getBodyAsJson().getJsonObject(ARTICLE);
+        User user = event.get("user");
+        message.put("slug", slugify.slugify(message.getString("title")));
+        message.put("author", user.toJson());
+
+        articleService.rxCreate(new Article(message))
+                      .subscribe((article, e) -> {
+                          if (e == null) {
+                              event.response()
+                                      .setStatusCode(HttpResponseStatus.CREATED.code())
+                                      .end(Json.encodePrettily(article.toJsonFor(user)));
+                          } else {
+                              event.fail(e);
+                          }
+                      });
+    }
+
+    @RouteConfig(path="/:article", method=HttpMethod.GET, middlewares = "extractArticleAndUser")
     public void get(RoutingContext event){
 
         Article article = event.get("article");
@@ -112,7 +89,7 @@ public class ArticleHandler extends BaseHandler {
 
     }
 
-    @RouteConfig(path="/:article", method=HttpMethod.POST, middlewares = "extractArticle")
+    @RouteConfig(path="/:article", method=HttpMethod.POST, middlewares = "extractArticleAndUser")
     public void update(RoutingContext event){
         Article article = event.get("article");
         User user = event.get("user");
@@ -144,7 +121,7 @@ public class ArticleHandler extends BaseHandler {
                    });
     }
 
-    @RouteConfig(path="/:article", method=HttpMethod.DELETE, middlewares = "extractArticle")
+    @RouteConfig(path="/:article", method=HttpMethod.DELETE, middlewares = "extractArticleAndUser")
     public void delete(RoutingContext event){
         Article article = event.get("article");
         if (event.get("userId") == article.getAuthor().get_id()) {

@@ -18,5 +18,5 @@ public interface ArticleService {
 
     void get(String slug, Handler<AsyncResult<Article>> resultHandler);
 
-    void delete(String slug, Handler<AsyncResult<Article>> resultHandler);
+    void delete(String slug, Handler<AsyncResult<Void>> resultHandler);
 }
