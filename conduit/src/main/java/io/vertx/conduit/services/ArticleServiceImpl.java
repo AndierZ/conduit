@@ -1,14 +1,12 @@
 package io.vertx.conduit.services;
 
 import io.vertx.conduit.entities.Article;
-import io.vertx.conduit.entities.User;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.FindOptions;
-import io.vertx.ext.mongo.MongoClientDeleteResult;
 import io.vertx.ext.mongo.UpdateOptions;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
 
@@ -43,7 +41,7 @@ public class ArticleServiceImpl implements ArticleService {
 
     @Override
     public void update(Article article, Handler<AsyncResult<Article>> resultHandler) {
-        mongoDbService.rxFindOneAndReplace(ARTICLE_COLLECTION, new JsonObject().put("slug", article.getSlug()), article.toJson(), findOptions, updateOptions)
+        mongoDbService.rxFindOneAndReplace(ARTICLE_COLLECTION, new JsonObject().put("_id", article.get_id()).put("slug", article.getSlug()), article.toJson(), findOptions, updateOptions)
                 .subscribe((json, ex) -> handleArticle(resultHandler, json, ex));
     }
 

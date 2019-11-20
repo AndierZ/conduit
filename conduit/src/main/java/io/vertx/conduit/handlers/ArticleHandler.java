@@ -19,6 +19,8 @@ import logging.ContextLogger;
 import routerutils.BaseHandler;
 import routerutils.RouteConfig;
 
+import java.util.Objects;
+
 @RouteConfig(path="/api/articles", produces = "application/json")
 public class ArticleHandler extends BaseHandler {
 
@@ -46,21 +48,36 @@ public class ArticleHandler extends BaseHandler {
         this.slugify = new Slugify();
     }
 
-    public void extractArticleAndUser(RoutingContext event) {
+    public void extractArticle(RoutingContext event) {
         String slug = event.request().getParam("article");
-
-        articleService.rxGet(slug)
-                .zipWith(userService.rxGet(event.get("userId")), (article, user) -> {
-                    event.put("article", article);
-                    event.put("user", user);
-                    return null;
-                })
-                .doOnError(event::fail)
-                .doOnSuccess(res -> event.next())
-                .subscribe();
+        if (slug != null) {
+            articleService.rxGet(slug)
+                    .subscribe((article, ex) -> {
+                        if (ex == null) {
+                            event.put("article", article);
+                            event.next();
+                        } else {
+                            event.fail(ex);
+                        }
+                    });
+        } else {
+            event.next();
+        }
     }
 
-    @RouteConfig(path="/", method= HttpMethod.POST, middlewares = "extractArticleAndUser")
+    public void extractUser(RoutingContext event) {
+        userService.rxGetById(event.get("userId"))
+                   .subscribe((user, ex) -> {
+                       if (ex == null) {
+                           event.put("user", user);
+                           event.next();
+                       } else {
+                           event.fail(ex);
+                       }
+                   });
+    }
+
+    @RouteConfig(path="/", method= HttpMethod.POST, middlewares = "extractUser")
     public void create(RoutingContext event) {
         JsonObject message = event.getBodyAsJson().getJsonObject(ARTICLE);
         User user = event.get("user");
@@ -79,7 +96,7 @@ public class ArticleHandler extends BaseHandler {
                       });
     }
 
-    @RouteConfig(path="/:article", method=HttpMethod.GET, middlewares = "extractArticleAndUser")
+    @RouteConfig(path="/:article", method=HttpMethod.GET, middlewares = {"extractArticle", "extractUser"})
     public void get(RoutingContext event){
 
         Article article = event.get("article");
@@ -89,24 +106,24 @@ public class ArticleHandler extends BaseHandler {
 
     }
 
-    @RouteConfig(path="/:article", method=HttpMethod.POST, middlewares = "extractArticleAndUser")
+    @RouteConfig(path="/:article", method=HttpMethod.POST, middlewares = {"extractArticle", "extractUser"})
     public void update(RoutingContext event){
         Article article = event.get("article");
         User user = event.get("user");
 
-        if (user.get_id() != article.getAuthor().get_id()) {
+        if (!Objects.equals(user.get_id(), article.getAuthor().get_id())) {
             event.fail(new RuntimeException("Invalid User"));
         }
 
         JsonObject message = event.getBodyAsJson().getJsonObject(ARTICLE);
-        if (message.getJsonObject("article").getString("title") != null) {
-            article.setTitle(message.getJsonObject("article").getString("title"));
+        if (message.getString("title") != null) {
+            article.setTitle(message.getString("title"));
         }
-        if (message.getJsonObject("article").getString("description") != null) {
-            article.setDescription(message.getJsonObject("article").getString("description"));
+        if (message.getString("description") != null) {
+            article.setDescription(message.getString("description"));
         }
-        if (message.getJsonObject("article").getString("body") != null) {
-            article.setBody(message.getJsonObject("article").getString("body"));
+        if (message.getString("body") != null) {
+            article.setBody(message.getString("body"));
         }
 
         articleService.rxUpdate(article)
@@ -121,10 +138,10 @@ public class ArticleHandler extends BaseHandler {
                    });
     }
 
-    @RouteConfig(path="/:article", method=HttpMethod.DELETE, middlewares = "extractArticleAndUser")
+    @RouteConfig(path="/:article", method=HttpMethod.DELETE, middlewares = {"extractArticle", "extractUser"})
     public void delete(RoutingContext event){
         Article article = event.get("article");
-        if (event.get("userId") == article.getAuthor().get_id()) {
+        if (Objects.equals(event.get("userId"), article.getAuthor().get_id())) {
             articleService.rxDelete(article.getSlug());
         } else {
             event.fail(new RuntimeException("Invalid user"));

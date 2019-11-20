@@ -9,7 +9,7 @@ import java.util.List;
 public class Article extends Base {
 
     public Article(JsonObject jsonObject) {
-        ArticleConverter.fromJson(jsonObject, this);
+        fromJson(jsonObject);
     }
 
     private String slug;
@@ -94,7 +94,6 @@ public class Article extends Base {
 
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
-        super.toJson(json);
         ArticleConverter.toJson(this, json);
         return json;
     }

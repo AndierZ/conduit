@@ -77,7 +77,6 @@ public class User extends Base {
 
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
-        super.toJson(json);
         UserConverter.toJson(this, json);
         return json;
     }
