@@ -94,7 +94,7 @@ public class MongoDbServiceImpl implements MongoDbService {
     @Override
     public void findOneAndUpdate(final String collection, final JsonObject query, final JsonObject toUpdate, final FindOptions findOptions, final UpdateOptions updateOptions, final Handler<AsyncResult<JsonObject>> resultHandler) {
         try {
-            client.rxFindOneAndUpdateWithOptions(collection, query, toUpdate, findOptions, updateOptions).subscribe(resp -> {
+            client.rxFindOneAndUpdateWithOptions(collection, query, new JsonObject().put("$set", toUpdate), findOptions, updateOptions).subscribe(resp -> {
                 resultHandler.handle(Future.succeededFuture(resp));
             }, cause -> {
                 resultHandler.handle(Future.failedFuture(cause));
@@ -105,9 +105,9 @@ public class MongoDbServiceImpl implements MongoDbService {
     }
 
     @Override
-    public void findOneAndReplace(final String collection, final JsonObject query, final JsonObject toUpdate, final FindOptions findOptions, final UpdateOptions updateOptions, final Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void findOneAndReplace(final String collection, final JsonObject query, final JsonObject replacement, final FindOptions findOptions, final UpdateOptions updateOptions, final Handler<AsyncResult<JsonObject>> resultHandler) {
         try {
-            client.rxFindOneAndReplaceWithOptions(collection, query, toUpdate, findOptions, updateOptions).subscribe(resp -> {
+            client.rxFindOneAndReplaceWithOptions(collection, query, replacement, findOptions, updateOptions).subscribe(resp -> {
                 resultHandler.handle(Future.succeededFuture(resp));
             }, cause -> {
                 resultHandler.handle(Future.failedFuture(cause));

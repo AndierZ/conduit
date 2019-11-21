@@ -19,6 +19,9 @@
 15. Add annotation process to reigster handlers to routes
 16. CRUD for user with authentication
 17. Rxify the MongoDb service and User service.
+18. Fix findOneAndUpdate and use that for update routes. Send JsonObject from handler to service, and object the other way around
+19. Fix issue where handler is not sending responses back 
+20. How to do something like mongoose populate?
 
 CRUD articles
 CRUD comments

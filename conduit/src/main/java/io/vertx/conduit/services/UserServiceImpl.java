@@ -73,7 +73,6 @@ public class UserServiceImpl implements UserService {
                 .subscribe((json, ex) -> handleUser(resultHandler, json, ex));
     }
 
-
     private static void handleUser(Handler<AsyncResult<User>> resultHandler, JsonObject json, Throwable ex) {
         if (ex == null) {
             resultHandler.handle(Future.succeededFuture(new User(json)));
