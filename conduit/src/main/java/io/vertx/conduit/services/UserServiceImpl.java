@@ -33,12 +33,12 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void create(User user, Handler<AsyncResult<User>> resultHandler) {
-        mongoDbService.rxInsertOne(USER_COLLECTION, user.toJson())
+    public void create(JsonObject user, Handler<AsyncResult<User>> resultHandler) {
+        mongoDbService.rxInsertOne(USER_COLLECTION, user)
                       .subscribe((id, ex) -> {
                           if (ex == null) {
-                              user.set_id(id);
-                              resultHandler.handle(Future.succeededFuture(user));
+                              user.put("_id", id);
+                              resultHandler.handle(Future.succeededFuture(new User(user)));
                           } else {
                               resultHandler.handle(Future.failedFuture(ex));
                           }
@@ -67,9 +67,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void update(String id, User user, Handler<AsyncResult<User>> resultHandler) {
+    public void update(String id, JsonObject update, Handler<AsyncResult<User>> resultHandler) {
         // Have to filter on all unique fields for mongodb to replace the document instead of inserting a new one
-        mongoDbService.rxFindOneAndReplace(USER_COLLECTION, new JsonObject().put("_id", id).put("email", user.getEmail()).put("username", user.getUsername()), user.toJson(), findOptions, updateOptions)
+        mongoDbService.rxFindOneAndUpdate(USER_COLLECTION, new JsonObject().put("_id", id), update, findOptions, updateOptions)
                 .subscribe((json, ex) -> handleUser(resultHandler, json, ex));
     }
 

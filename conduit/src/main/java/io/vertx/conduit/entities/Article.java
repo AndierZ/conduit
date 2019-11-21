@@ -94,6 +94,7 @@ public class Article extends Base {
 
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
+        super.toJson(json);
         ArticleConverter.toJson(this, json);
         return json;
     }

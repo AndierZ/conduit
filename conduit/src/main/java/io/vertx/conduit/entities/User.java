@@ -2,7 +2,6 @@ package io.vertx.conduit.entities;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
-import org.springframework.security.crypto.bcrypt.BCrypt;
 
 import java.util.List;
 
@@ -19,7 +18,7 @@ public class User extends Base {
 
     String email;
 
-    String passwordHash;
+    String password;
 
     String token;
 
@@ -43,12 +42,12 @@ public class User extends Base {
         this.email = email;
     }
 
-    public String getPasswordHash() {
-        return passwordHash;
+    public String getPassword() {
+        return password;
     }
 
-    public void setPasswordHash(String passwordHash) {
-        this.passwordHash = passwordHash;
+    public void setPassword(String password) {
+        this.password = password;
     }
 
     public String getToken() {
@@ -77,6 +76,7 @@ public class User extends Base {
 
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
+        super.toJson(json);
         UserConverter.toJson(this, json);
         return json;
     }
@@ -88,12 +88,6 @@ public class User extends Base {
 
     public String getUsername() {
         return username;
-    }
-
-    public void setPassword(String password) {
-        String salt = BCrypt.gensalt();
-        String passwordHash = BCrypt.hashpw(password, salt);
-        setPasswordHash(passwordHash);
     }
 
     public JsonObject toAuthJson() {

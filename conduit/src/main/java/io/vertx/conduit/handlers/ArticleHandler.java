@@ -84,7 +84,7 @@ public class ArticleHandler extends BaseHandler {
         message.put("slug", slugify.slugify(message.getString("title")));
         message.put("author", user.toJson());
 
-        articleService.rxCreate(new Article(message))
+        articleService.rxCreate(message)
                       .subscribe((article, e) -> {
                           if (e == null) {
                               event.response()
@@ -116,17 +116,8 @@ public class ArticleHandler extends BaseHandler {
         }
 
         JsonObject message = event.getBodyAsJson().getJsonObject(ARTICLE);
-        if (message.getString("title") != null) {
-            article.setTitle(message.getString("title"));
-        }
-        if (message.getString("description") != null) {
-            article.setDescription(message.getString("description"));
-        }
-        if (message.getString("body") != null) {
-            article.setBody(message.getString("body"));
-        }
 
-        articleService.rxUpdate(article)
+        articleService.rxUpdate(article.getSlug(), message)
                    .subscribe((res, e) -> {
                        if (e == null) {
                            event.response()

@@ -1,7 +1,6 @@
 package io.vertx.conduit.handlers;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.conduit.entities.User;
 import io.vertx.conduit.services.UserService;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -49,7 +48,7 @@ public class UserHandler extends BaseHandler {
                     if (ex != null) {
                         event.fail(new RuntimeException("Invalid user credentials"));
                     } else {
-                        String hashed = res.getPasswordHash();
+                        String hashed = res.getPassword();
                         if (BCrypt.checkpw(message.getString("password"), hashed)) {
                             JsonObject userAuthJson = res.toAuthJson();
                             appendJwt(userAuthJson, res.get_id());
@@ -63,20 +62,23 @@ public class UserHandler extends BaseHandler {
                 });
     }
 
+    private static String setPassword(String password) {
+        String salt = BCrypt.gensalt();
+        return BCrypt.hashpw(password, salt);
+    }
+
     @RouteConfig(path="/users", method=HttpMethod.POST, authRequired=false)
     public void register(RoutingContext event) {
         JsonObject message = event.getBodyAsJson().getJsonObject(USER);
-        User user = new User(message);
-        user.setPassword(message.getString("password"));
-        userService.rxCreate(user)
+        message.put("password", setPassword(message.getString("password")));
+        userService.rxCreate(message)
                 .subscribe((res, ex) -> handleResponse(event, res.toAuthJson(), ex, HttpResponseStatus.OK));
     }
 
     @RouteConfig(path="/user", method = HttpMethod.POST)
     public void put(RoutingContext event) {
         JsonObject message = event.getBodyAsJson().getJsonObject(USER);
-        User user = new User(message);
-        userService.rxUpdate(event.get("userId"), user)
+        userService.rxUpdate(event.get("userId"), message)
                 .subscribe((res, ex) -> handleResponse(event, res.toAuthJson(), ex, HttpResponseStatus.OK));
     }
 

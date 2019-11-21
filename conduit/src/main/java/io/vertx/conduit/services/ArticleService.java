@@ -5,6 +5,7 @@ import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.conduit.entities.Article;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
+import io.vertx.core.json.JsonObject;
 
 @VertxGen
 @ProxyGen
@@ -12,9 +13,9 @@ public interface ArticleService {
 
     String ADDRESS = ArticleService.class.getName();
 
-    void create(Article article, Handler<AsyncResult<Article>> resultHandler);
+    void create(JsonObject article, Handler<AsyncResult<Article>> resultHandler);
 
-    void update(Article article, Handler<AsyncResult<Article>> resultHandler);
+    void update(String slug, JsonObject article, Handler<AsyncResult<Article>> resultHandler);
 
     void get(String slug, Handler<AsyncResult<Article>> resultHandler);
 

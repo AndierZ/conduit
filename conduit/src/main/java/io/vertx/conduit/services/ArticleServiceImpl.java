@@ -27,12 +27,12 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public void create(Article article, Handler<AsyncResult<Article>> resultHandler) {
-        mongoDbService.rxInsertOne(ARTICLE_COLLECTION, article.toJson())
+    public void create(JsonObject article, Handler<AsyncResult<Article>> resultHandler) {
+        mongoDbService.rxInsertOne(ARTICLE_COLLECTION, article)
                 .subscribe((id, ex) -> {
                     if (ex == null) {
-                        article.set_id(id);
-                        resultHandler.handle(Future.succeededFuture(article));
+                        article.put("_id", id);
+                        resultHandler.handle(Future.succeededFuture(new Article(article)));
                     } else {
                         resultHandler.handle(Future.failedFuture(ex));
                     }
@@ -40,8 +40,8 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public void update(Article article, Handler<AsyncResult<Article>> resultHandler) {
-        mongoDbService.rxFindOneAndReplace(ARTICLE_COLLECTION, new JsonObject().put("_id", article.get_id()).put("slug", article.getSlug()), article.toJson(), findOptions, updateOptions)
+    public void update(String slug, JsonObject article, Handler<AsyncResult<Article>> resultHandler) {
+        mongoDbService.rxFindOneAndUpdate(ARTICLE_COLLECTION, new JsonObject().put("slug", slug), article, findOptions, updateOptions)
                 .subscribe((json, ex) -> handleArticle(resultHandler, json, ex));
     }
 
