@@ -28,6 +28,9 @@ dependencies{
     compile group: 'org.springframework.security', name: 'spring-security-crypto', version: '3.1.0.RELEASE'
     compileOnly group: 'io.vertx', name: 'vertx-codegen'
     compile project (':common')
+
+    testCompile group: 'io.vertx', name:'vertx-unit'
+    testCompile group: 'junit', name:'junit', version:'4.12'
 }
 
 def generated_dir = 'src/main/generated'
@@ -51,6 +54,11 @@ sourceSets {
     main {
         java {
             srcDirs += generated_dir
+        }
+    }
+    test {
+        java {
+            srcDirs 'test/java'
         }
     }
 }

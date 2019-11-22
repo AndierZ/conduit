@@ -21,7 +21,8 @@
 17. Rxify the MongoDb service and User service.
 18. Fix findOneAndUpdate and use that for update routes. Send JsonObject from handler to service, and object the other way around
 19. Fix issue where handler is not sending responses back 
-20. How to do something like mongoose populate?
+20. Add unit test for mongodb service
+21. Use Morphia in mongodb service
 
 CRUD articles
 CRUD comments
