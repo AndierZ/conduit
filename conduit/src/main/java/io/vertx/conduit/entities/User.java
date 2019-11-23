@@ -2,9 +2,14 @@ package io.vertx.conduit.entities;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
+import org.mongodb.morphia.annotations.*;
 
-import java.util.List;
+import javax.validation.constraints.Email;
+import javax.validation.constraints.NotEmpty;
 
+
+@Entity("users")
+@Indexes(@Index(fields = { @Field("username"), @Field("email") }, options = @IndexOptions(unique = true)))
 @DataObject(generateConverter = true)
 public class User extends Base {
 
@@ -14,21 +19,19 @@ public class User extends Base {
         fromJson(json);
     }
 
+    @NotEmpty
     String username;
 
+    @NotEmpty
+    @Email
     String email;
 
+    @NotEmpty
     String password;
-
-    String token;
 
     String bio;
 
     String image;
-
-    List<User> following;
-
-    List<Article> favorites;
 
     public void setUsername(String username) {
         this.username = username;
@@ -48,14 +51,6 @@ public class User extends Base {
 
     public void setPassword(String password) {
         this.password = password;
-    }
-
-    public String getToken() {
-        return token;
-    }
-
-    public void setToken(String token) {
-        this.token = token;
     }
 
     public String getBio() {

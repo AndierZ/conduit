@@ -2,8 +2,6 @@ package io.vertx.conduit.handlers;
 
 import com.github.slugify.Slugify;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.reactivex.Observable;
-import io.reactivex.Single;
 import io.vertx.conduit.entities.Article;
 import io.vertx.conduit.entities.User;
 import io.vertx.conduit.services.ArticleService;
@@ -111,7 +109,7 @@ public class ArticleHandler extends BaseHandler {
         Article article = event.get("article");
         User user = event.get("user");
 
-        if (!Objects.equals(user.get_id(), article.getAuthor().get_id())) {
+        if (!Objects.equals(user.getId(), article.getAuthor().getId())) {
             event.fail(new RuntimeException("Invalid User"));
         }
 
@@ -132,7 +130,7 @@ public class ArticleHandler extends BaseHandler {
     @RouteConfig(path="/:article", method=HttpMethod.DELETE, middlewares = {"extractArticle", "extractUser"})
     public void delete(RoutingContext event){
         Article article = event.get("article");
-        if (Objects.equals(event.get("userId"), article.getAuthor().get_id())) {
+        if (Objects.equals(event.get("userId"), article.getAuthor().getId())) {
             articleService.rxDelete(article.getSlug());
         } else {
             event.fail(new RuntimeException("Invalid user"));

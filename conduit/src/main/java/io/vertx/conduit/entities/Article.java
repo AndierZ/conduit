@@ -2,9 +2,14 @@ package io.vertx.conduit.entities;
 
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
+import org.mongodb.morphia.annotations.*;
 
+import javax.validation.Valid;
+import javax.validation.constraints.NotEmpty;
 import java.util.List;
 
+@Entity("articles")
+@Indexes(@Index(fields = { @Field("slug") }, options = @IndexOptions(unique = true)))
 @DataObject(generateConverter = true)
 public class Article extends Base {
 
@@ -12,8 +17,10 @@ public class Article extends Base {
         fromJson(jsonObject);
     }
 
+    @NotEmpty
     private String slug;
 
+    @NotEmpty
     private String title;
 
     private String description;
@@ -26,6 +33,8 @@ public class Article extends Base {
 
     private int favoritesCount;
 
+    @Reference
+    @Valid
     private User author;
 
     public String getSlug() {

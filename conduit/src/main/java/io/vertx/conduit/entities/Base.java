@@ -1,23 +1,31 @@
 package io.vertx.conduit.entities;
 
 import io.vertx.core.json.JsonObject;
+import org.bson.types.ObjectId;
+import org.mongodb.morphia.annotations.Entity;
+import org.mongodb.morphia.annotations.Id;
+import org.mongodb.morphia.annotations.Version;
 
 import java.io.Serializable;
 
+@Entity
 public abstract class Base implements Serializable {
-    private String _id;
+    @Id
+    private ObjectId id;
+    @Version
+    private int version;
     private String createdBy;
     private long createdTime;
     private long updatedTime;
     private String updatedBy;
     private boolean isActive;
 
-    public String get_id() {
-        return _id;
+    public ObjectId getId() {
+        return id;
     }
 
-    public void set_id(String _id) {
-        this._id = _id;
+    public void setId(ObjectId id) {
+        this.id = id;
     }
 
     public String getCreatedBy() {
@@ -61,14 +69,21 @@ public abstract class Base implements Serializable {
     }
 
     protected void toJson(JsonObject json) {
-        json.put("_id", _id);
+        json.put("_id", id);
     }
 
     protected void fromJson(JsonObject json) {
         String id = json.getString("_id");
         if (id != null) {
-            _id = id;
+            this.id = new ObjectId(id);
         }
     }
 
+    public int getVersion() {
+        return version;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
 }

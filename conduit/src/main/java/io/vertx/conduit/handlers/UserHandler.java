@@ -51,7 +51,7 @@ public class UserHandler extends BaseHandler {
                         String hashed = res.getPassword();
                         if (BCrypt.checkpw(message.getString("password"), hashed)) {
                             JsonObject userAuthJson = res.toAuthJson();
-                            appendJwt(userAuthJson, res.get_id());
+                            appendJwt(userAuthJson, res.getId().toHexString());
                             event.response()
                                     .setStatusCode(HttpResponseStatus.CREATED.code())
                                     .end(Json.encodePrettily(userAuthJson));

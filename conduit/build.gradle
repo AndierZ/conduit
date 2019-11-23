@@ -26,6 +26,8 @@ dependencies{
     compile group: 'io.vertx', name: 'vertx-rx-java2-gen', version: '3.8.3'
     compile group: 'com.github.slugify', name: 'slugify', version: '2.2'
     compile group: 'org.springframework.security', name: 'spring-security-crypto', version: '3.1.0.RELEASE'
+    compile group: 'org.mongodb.morphia', name: 'morphia', version: '1.3.2'
+    compile group: 'org.hibernate', name: 'hibernate-validator', version: '6.1.0.Final'
     compileOnly group: 'io.vertx', name: 'vertx-codegen'
     compile project (':common')
 
