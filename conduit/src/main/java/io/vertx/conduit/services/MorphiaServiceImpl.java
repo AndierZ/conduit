@@ -4,6 +4,8 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoWriteException;
+import io.vertx.conduit.entities.Base;
+import io.vertx.conduit.entities.User;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
@@ -16,18 +18,19 @@ import io.vertx.ext.mongo.UpdateOptions;
 import org.bson.BsonDocument;
 import org.bson.Document;
 import org.mongodb.morphia.Datastore;
+import org.mongodb.morphia.Key;
 import org.mongodb.morphia.Morphia;
 
 import java.util.List;
 
-public class MorphiaServiceImpl implements MongoDbService {
+public class MorphiaServiceImpl implements MorphiaService {
 
     private final Morphia morphia;
     private final Vertx vertx;
     private final Datastore datastore;
     private final MongoClient mongoClient;
 
-    public MorphiaServiceImpl(final Vertx vertx, final JsonObject dbConfig, final Handler<AsyncResult<MongoDbService>> readyHandler) {
+    public MorphiaServiceImpl(final Vertx vertx, final JsonObject dbConfig, final Handler<AsyncResult<MorphiaService>> readyHandler) {
         this.vertx = vertx;
         this.mongoClient = new MongoClient(dbConfig.getString("host"), dbConfig.getInteger("port"));
         this.morphia = new Morphia();
@@ -65,7 +68,21 @@ public class MorphiaServiceImpl implements MongoDbService {
     }
 
     @Override
-    public void insertOne(final String collection, final JsonObject document, final Handler<AsyncResult<String>> resultHandler) {
+    public void insertOne(User entity, final Handler<AsyncResult<String>> resultHandler) {
+        insertOneGeneric(entity, resultHandler);
+    }
+
+    public <T extends Base> void insertOneGeneric(T entity, final Handler<AsyncResult<String>> resultHandler) {
+        vertx.executeBlocking(future -> {
+            Key<T> key = this.datastore.save(entity);
+            future.complete(key.getId().toString());
+        },res -> {
+            if (res.succeeded()) {
+                resultHandler.handle(Future.succeededFuture(res.result().toString()));
+            } else {
+                resultHandler.handle(Future.failedFuture(res.cause()));
+            }
+        });
     }
 
     @Override

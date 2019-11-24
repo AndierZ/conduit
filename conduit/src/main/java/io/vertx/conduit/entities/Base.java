@@ -13,7 +13,7 @@ public abstract class Base implements Serializable {
     @Id
     private ObjectId id;
     @Version
-    private int version;
+    private long version;
     private String createdBy;
     private long createdTime;
     private long updatedTime;
@@ -79,11 +79,11 @@ public abstract class Base implements Serializable {
         }
     }
 
-    public int getVersion() {
+    public long getVersion() {
         return version;
     }
 
-    public void setVersion(int version) {
+    public void setVersion(long version) {
         this.version = version;
     }
 }
