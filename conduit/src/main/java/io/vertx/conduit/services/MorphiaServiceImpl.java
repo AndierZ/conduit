@@ -4,6 +4,7 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoWriteException;
+import io.vertx.conduit.entities.Article;
 import io.vertx.conduit.entities.Base;
 import io.vertx.conduit.entities.User;
 import io.vertx.core.AsyncResult;
@@ -20,8 +21,11 @@ import org.bson.Document;
 import org.mongodb.morphia.Datastore;
 import org.mongodb.morphia.Key;
 import org.mongodb.morphia.Morphia;
+import org.mongodb.morphia.query.Query;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 public class MorphiaServiceImpl implements MorphiaService {
 
@@ -68,7 +72,38 @@ public class MorphiaServiceImpl implements MorphiaService {
     }
 
     @Override
-    public void insertOne(User entity, final Handler<AsyncResult<String>> resultHandler) {
+    public void findUser(final JsonObject query, Handler<AsyncResult<List<User>>> resultHandler) {
+        findGeneric(User.class, query, resultHandler);
+    }
+
+    @Override
+    public void findArticle(final JsonObject query, Handler<AsyncResult<List<Article>>> resultHandler) {
+        findGeneric(Article.class, query, resultHandler);
+    }
+
+    public <T extends Base> void findGeneric(Class<T> clazz, final JsonObject query, Handler<AsyncResult<List<T>>> resultHandler) {
+
+        vertx.executeBlocking(future -> {
+            Query<T> userQuery = datastore.createQuery(clazz);
+
+            for(Iterator<Map.Entry<String, Object>> it = query.iterator(); it.hasNext();) {
+                Map.Entry<String, Object> pair = it.next();
+                userQuery.filter(pair.getKey(), pair.getValue());
+            }
+
+            future.complete(userQuery.asList());
+        }, res -> {
+            if (res.succeeded()) {
+                resultHandler.handle(Future.succeededFuture((List<T>) res.result()));
+            } else {
+                resultHandler.handle(Future.failedFuture(res.cause()));
+            }
+        });
+
+    }
+
+    @Override
+    public void insertUser(User entity, final Handler<AsyncResult<String>> resultHandler) {
         insertOneGeneric(entity, resultHandler);
     }
 

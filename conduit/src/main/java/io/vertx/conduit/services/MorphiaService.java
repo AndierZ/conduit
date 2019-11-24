@@ -3,6 +3,7 @@ package io.vertx.conduit.services;
 import io.vertx.codegen.annotations.ProxyClose;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
+import io.vertx.conduit.entities.Article;
 import io.vertx.conduit.entities.User;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -26,7 +27,11 @@ public interface MorphiaService {
 
     void find(final String collection, final JsonObject query, final FindOptions options, Handler<AsyncResult<List<JsonObject>>> resultHandler);
 
-    void insertOne(User entity, final Handler<AsyncResult<String>> resultHandler);
+    void findUser(final JsonObject query, Handler<AsyncResult<List<User>>> resultHandler);
+
+    void findArticle(final JsonObject query, Handler<AsyncResult<List<Article>>> resultHandler);
+
+    void insertUser(User entity, final Handler<AsyncResult<String>> resultHandler);
 
     void upsert(final String collection, final JsonObject query, final JsonObject update, final UpdateOptions options, Handler<AsyncResult<MongoClientUpdateResult>> resultHandler);
 

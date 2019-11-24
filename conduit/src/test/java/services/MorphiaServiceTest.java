@@ -6,14 +6,17 @@ import io.vertx.conduit.services.reactivex.MorphiaService;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
-import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import logging.ContextLogger;
+import org.bson.types.ObjectId;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(VertxUnitRunner.class)
 public class MorphiaServiceTest {
@@ -33,7 +36,7 @@ public class MorphiaServiceTest {
     }
 
     @Test
-    public void TestWriteUser(TestContext tc){
+    public void TestWriteUser(TestContext tc) throws InterruptedException {
         System.out.println("Test writing user");
 
         User user = new User();
@@ -42,14 +45,22 @@ public class MorphiaServiceTest {
         user.setEmail("1@2.com");
         user.setUsername("xyz");
 
-        this.morphiaService.rxInsertOne(user)
-                           .doOnSuccess(id -> {
-                              LOGGER.info("Successfully created document with id {}", id);
+        this.morphiaService.rxInsertUser(user)
+                           .flatMap(id -> {
+                              LOGGER.info("Successfully created document with id " + id);
+                              user.setId(new ObjectId(id));
+                              user.setBio("abc_updated");
+                              return this.morphiaService.rxFindUser(new JsonObject().put("username", "xyz"));
+                           }).doOnSuccess(users -> {
+                              assertEquals(1, users.size());
+                              assertEquals(user.getUsername(), users.get(0).getUsername());
                            })
                            .doOnError(e -> {
                                LOGGER.error("Encountered error", e);
                            }).subscribe();
 
+        // FIXME how to make it wait for the worker thread to finish
+        Thread.sleep(10000);
     }
 
     @After
