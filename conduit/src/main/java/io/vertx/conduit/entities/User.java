@@ -1,8 +1,8 @@
 package io.vertx.conduit.entities;
 
+import dev.morphia.annotations.*;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
-import org.mongodb.morphia.annotations.*;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;

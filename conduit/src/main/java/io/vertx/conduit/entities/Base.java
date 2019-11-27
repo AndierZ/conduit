@@ -1,10 +1,10 @@
 package io.vertx.conduit.entities;
 
+import dev.morphia.annotations.Entity;
+import dev.morphia.annotations.Id;
+import dev.morphia.annotations.Version;
 import io.vertx.core.json.JsonObject;
 import org.bson.types.ObjectId;
-import org.mongodb.morphia.annotations.Entity;
-import org.mongodb.morphia.annotations.Id;
-import org.mongodb.morphia.annotations.Version;
 
 import java.io.Serializable;
 

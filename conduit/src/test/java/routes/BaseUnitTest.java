@@ -21,7 +21,7 @@ public class BaseUnitTest {
     protected Vertx vertx;
 
     @Before
-    public void setUp(TestContext tc) {
+    public void setup(TestContext tc) {
 
         vertx = Vertx.vertx();
 

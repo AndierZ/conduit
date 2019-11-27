@@ -23,6 +23,8 @@
 19. Fix issue where handler is not sending responses back 
 20. Add unit test for mongodb service
 21. Use Morphia in mongodb service
+22. Create Morphia service
+23. Make sure Morphia annotation works regarding index and validation
 
 CRUD articles
 CRUD comments
@@ -32,8 +34,8 @@ add tags
 add query routes
 better deal with event.fail(e), instead of just showing internal server error?
 
-look into using protobuf as customized codec for service proxy
 security review
 Create docker for each separate each verticle as its own process/service
 Run each docker/service independently on a cluster
 Add load balancer in front of the http verticles
+look into using protobuf as customized codec for service proxy

@@ -6,6 +6,7 @@ import io.vertx.conduit.services.reactivex.MorphiaService;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
+import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
 import logging.ContextLogger;
@@ -37,6 +38,8 @@ public class MorphiaServiceTest {
 
     @Test
     public void TestWriteUser(TestContext tc) throws InterruptedException {
+        Async async = tc.async();
+
         System.out.println("Test writing user");
 
         User user = new User();
@@ -45,22 +48,28 @@ public class MorphiaServiceTest {
         user.setEmail("1@2.com");
         user.setUsername("xyz");
 
-        this.morphiaService.rxInsertUser(user)
+        this.morphiaService.rxCreateUser(user)
                            .flatMap(id -> {
                               LOGGER.info("Successfully created document with id " + id);
                               user.setId(new ObjectId(id));
-                              user.setBio("abc_updated");
-                              return this.morphiaService.rxFindUser(new JsonObject().put("username", "xyz"));
-                           }).doOnSuccess(users -> {
+                              return this.morphiaService.rxGetUser(new JsonObject().put("_id", user.getId().toHexString()));
+                           }).flatMap(users -> {
                               assertEquals(1, users.size());
                               assertEquals(user.getUsername(), users.get(0).getUsername());
-                           })
-                           .doOnError(e -> {
-                               LOGGER.error("Encountered error", e);
-                           }).subscribe();
-
-        // FIXME how to make it wait for the worker thread to finish
-        Thread.sleep(10000);
+                              user.setBio("bio_updated");
+                              return this.morphiaService.rxUpdateUser(new JsonObject().put("_id", user.getId().toHexString()), new JsonObject().put("bio", user.getBio()));
+                           }).flatMap(users -> {
+                              assertEquals(1, users.size());
+                              assertEquals(user.getBio(), users.get(0).getBio());
+                              return this.morphiaService.rxDeleteUser(new JsonObject().put("_id", user.getId().toHexString()));
+                           }).subscribe((numDeleted, e) -> {
+                              if (e == null) {
+                                  assertEquals(1, (int) numDeleted);
+                                  async.complete();
+                              } else {
+                                  tc.fail(e);
+                              }
+                           });
     }
 
     @After

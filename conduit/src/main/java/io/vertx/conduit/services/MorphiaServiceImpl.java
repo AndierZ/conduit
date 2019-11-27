@@ -1,9 +1,13 @@
 package io.vertx.conduit.services;
 
-import com.mongodb.BasicDBObject;
-import com.mongodb.DBObject;
 import com.mongodb.MongoClient;
-import com.mongodb.MongoWriteException;
+import dev.morphia.Datastore;
+import dev.morphia.Key;
+import dev.morphia.Morphia;
+import dev.morphia.query.Query;
+import dev.morphia.query.UpdateOperations;
+import dev.morphia.query.UpdateResults;
+import dev.morphia.query.internal.MorphiaCursor;
 import io.vertx.conduit.entities.Article;
 import io.vertx.conduit.entities.Base;
 import io.vertx.conduit.entities.User;
@@ -12,16 +16,9 @@ import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.FindOptions;
 import io.vertx.ext.mongo.MongoClientDeleteResult;
-import io.vertx.ext.mongo.MongoClientUpdateResult;
-import io.vertx.ext.mongo.UpdateOptions;
-import org.bson.BsonDocument;
 import org.bson.Document;
-import org.mongodb.morphia.Datastore;
-import org.mongodb.morphia.Key;
-import org.mongodb.morphia.Morphia;
-import org.mongodb.morphia.query.Query;
+import org.bson.types.ObjectId;
 
 import java.util.Iterator;
 import java.util.List;
@@ -59,39 +56,67 @@ public class MorphiaServiceImpl implements MorphiaService {
     }
 
     @Override
-    public void findOne(final String collection, final JsonObject query, final JsonObject fields, final Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void getUser(final JsonObject query, Handler<AsyncResult<List<User>>> resultHandler) {
+        find(User.class, query, resultHandler);
     }
 
     @Override
-    public void findById(final String collection, final String id, final JsonObject fields, final Handler<AsyncResult<JsonObject>> resultHandler) {
-        findOne(collection, new JsonObject().put("_id", id), fields, resultHandler);
+    public void getArticle(final JsonObject query, Handler<AsyncResult<List<Article>>> resultHandler) {
+        find(Article.class, query, resultHandler);
     }
 
     @Override
-    public void find(final String collection, final JsonObject query, final FindOptions options, Handler<AsyncResult<List<JsonObject>>> resultHandler) {
+    public void createUser(User entity, final Handler<AsyncResult<String>> resultHandler) {
+        save(entity, resultHandler);
     }
 
     @Override
-    public void findUser(final JsonObject query, Handler<AsyncResult<List<User>>> resultHandler) {
-        findGeneric(User.class, query, resultHandler);
+    public void createArticle(Article entity, Handler<AsyncResult<String>> resultHandler) {
+        save(entity, resultHandler);
     }
 
     @Override
-    public void findArticle(final JsonObject query, Handler<AsyncResult<List<Article>>> resultHandler) {
-        findGeneric(Article.class, query, resultHandler);
+    public void updateUser(JsonObject query, JsonObject update, Handler<AsyncResult<List<User>>> resultHandler) {
+        update(User.class, query, update, resultHandler);
     }
 
-    public <T extends Base> void findGeneric(Class<T> clazz, final JsonObject query, Handler<AsyncResult<List<T>>> resultHandler) {
+    @Override
+    public void updateArticle(JsonObject query, JsonObject update, Handler<AsyncResult<List<Article>>> resultHandler) {
+        update(Article.class, query, update, resultHandler);
+    }
 
+    @Override
+    public void deleteUser(JsonObject query, Handler<AsyncResult<Integer>> resultHandler) {
+        delete(User.class, query, resultHandler);
+    }
+
+    @Override
+    public void deleteArticle(JsonObject query, Handler<AsyncResult<Integer>> resultHandler) {
+        delete(Article.class, query, resultHandler);
+    }
+
+    public <T extends Base> void update(final Class<T> clazz, final JsonObject query, final JsonObject update, final Handler<AsyncResult<List<T>>> resultHandler) {
         vertx.executeBlocking(future -> {
-            Query<T> userQuery = datastore.createQuery(clazz);
+            Query<T> updateQuery = datastore.createQuery(clazz);
 
             for(Iterator<Map.Entry<String, Object>> it = query.iterator(); it.hasNext();) {
                 Map.Entry<String, Object> pair = it.next();
-                userQuery.filter(pair.getKey(), pair.getValue());
+                if ("_id".equals(pair.getKey())) {
+                    updateQuery.filter("_id", new ObjectId(pair.getValue().toString()));
+                } else {
+                    updateQuery.filter(pair.getKey(), pair.getValue());
+                }
             }
 
-            future.complete(userQuery.asList());
+            final UpdateOperations<T> updateOperations = datastore.createUpdateOperations(clazz);
+            for(Iterator<Map.Entry<String, Object>> it = update.iterator(); it.hasNext();) {
+                Map.Entry<String, Object> pair = it.next();
+                updateOperations.set(pair.getKey(), pair.getValue());
+            }
+
+            datastore.update(updateQuery, updateOperations);
+
+            future.complete(updateQuery.find().toList());
         }, res -> {
             if (res.succeeded()) {
                 resultHandler.handle(Future.succeededFuture((List<T>) res.result()));
@@ -99,15 +124,56 @@ public class MorphiaServiceImpl implements MorphiaService {
                 resultHandler.handle(Future.failedFuture(res.cause()));
             }
         });
-
     }
 
-    @Override
-    public void insertUser(User entity, final Handler<AsyncResult<String>> resultHandler) {
-        insertOneGeneric(entity, resultHandler);
+    public <T extends Base> void find(final Class<T> clazz, final JsonObject query, final Handler<AsyncResult<List<T>>> resultHandler) {
+
+        vertx.executeBlocking(future -> {
+            Query<T> findQuery = datastore.createQuery(clazz);
+
+            for(Iterator<Map.Entry<String, Object>> it = query.iterator(); it.hasNext();) {
+                Map.Entry<String, Object> pair = it.next();
+                if ("_id".equals(pair.getKey())) {
+                    findQuery.filter("_id", new ObjectId(pair.getValue().toString()));
+                } else {
+                    findQuery.filter(pair.getKey(), pair.getValue());
+                }
+            }
+
+            future.complete(findQuery.find().toList());
+        }, res -> {
+            if (res.succeeded()) {
+                resultHandler.handle(Future.succeededFuture((List<T>) res.result()));
+            } else {
+                resultHandler.handle(Future.failedFuture(res.cause()));
+            }
+        });
     }
 
-    public <T extends Base> void insertOneGeneric(T entity, final Handler<AsyncResult<String>> resultHandler) {
+    public <T extends Base> void delete(final Class<T> clazz, final JsonObject query, final Handler<AsyncResult<Integer>> resultHandler) {
+        vertx.executeBlocking(future -> {
+            final Query<T> deleteQuery = datastore.createQuery(clazz);
+            for(Iterator<Map.Entry<String, Object>> it = query.iterator(); it.hasNext();) {
+                Map.Entry<String, Object> pair = it.next();
+                if ("_id".equals(pair.getKey())) {
+                    deleteQuery.filter("_id", new ObjectId(pair.getValue().toString()));
+                } else {
+                    deleteQuery.filter(pair.getKey(), pair.getValue());
+                }
+            }
+            int numDeleted = deleteQuery.find().toList().size();
+            datastore.delete(deleteQuery);
+            future.complete(numDeleted);
+        }, res -> {
+            if (res.succeeded()) {
+                resultHandler.handle(Future.succeededFuture( (Integer) res.result()));
+            } else {
+                resultHandler.handle(Future.failedFuture(res.cause()));
+            }
+        });
+    }
+
+    private <T extends Base> void save(final T entity, final Handler<AsyncResult<String>> resultHandler) {
         vertx.executeBlocking(future -> {
             Key<T> key = this.datastore.save(entity);
             future.complete(key.getId().toString());
@@ -120,22 +186,6 @@ public class MorphiaServiceImpl implements MorphiaService {
         });
     }
 
-    @Override
-
-    public void upsert(final String collection, final JsonObject query, final JsonObject toUpdate, final UpdateOptions options, Handler<AsyncResult<MongoClientUpdateResult>> resultHandler) {
-    }
-
-    @Override
-    public void findOneAndUpdate(final String collection, final JsonObject query, final JsonObject toUpdate, final FindOptions findOptions, final UpdateOptions updateOptions, final Handler<AsyncResult<JsonObject>> resultHandler) {
-    }
-
-    @Override
-    public void findOneAndReplace(final String collection, final JsonObject query, final JsonObject replacement, final FindOptions findOptions, final UpdateOptions updateOptions, final Handler<AsyncResult<JsonObject>> resultHandler) {
-    }
-
-    @Override
-    public void delete(final String collection, final JsonObject query, Handler<AsyncResult<MongoClientDeleteResult>> resultHandler){
-    }
 
     @Override
     public void close() {

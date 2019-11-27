@@ -21,25 +21,21 @@ public interface MorphiaService {
 
     String ADDRESS = MorphiaService.class.getName();
 
-    void findOne(final String collection, final JsonObject query, final JsonObject fields, final Handler<AsyncResult<JsonObject>> resultHandler);
+    void getUser(final JsonObject query, Handler<AsyncResult<List<User>>> resultHandler);
 
-    void findById(final String collection, String id, final JsonObject fields, final Handler<AsyncResult<JsonObject>> resultHandler);
+    void getArticle(final JsonObject query, Handler<AsyncResult<List<Article>>> resultHandler);
 
-    void find(final String collection, final JsonObject query, final FindOptions options, Handler<AsyncResult<List<JsonObject>>> resultHandler);
+    void createUser(User entity, final Handler<AsyncResult<String>> resultHandler);
 
-    void findUser(final JsonObject query, Handler<AsyncResult<List<User>>> resultHandler);
+    void createArticle(Article entity, final Handler<AsyncResult<String>> resultHandler);
 
-    void findArticle(final JsonObject query, Handler<AsyncResult<List<Article>>> resultHandler);
+    void updateUser(final JsonObject query, final JsonObject update, final Handler<AsyncResult<List<User>>> resultHandler);
 
-    void insertUser(User entity, final Handler<AsyncResult<String>> resultHandler);
+    void updateArticle(final JsonObject query, final JsonObject update, final Handler<AsyncResult<List<Article>>> resultHandler);
 
-    void upsert(final String collection, final JsonObject query, final JsonObject update, final UpdateOptions options, Handler<AsyncResult<MongoClientUpdateResult>> resultHandler);
+    void deleteUser(final JsonObject query, Handler<AsyncResult<Integer>> resultHandler);
 
-    void findOneAndUpdate(final String collection, final JsonObject query, final JsonObject update, final FindOptions findOptions, final UpdateOptions updateOptions, final Handler<AsyncResult<JsonObject>> resultHandler);
-
-    void findOneAndReplace(String collection, JsonObject query, JsonObject update, FindOptions findOptions, UpdateOptions updateOptions, Handler<AsyncResult<JsonObject>> resultHandler);
-
-    void delete(final String collection, final JsonObject query, Handler<AsyncResult<MongoClientDeleteResult>> resultHandler);
+    void deleteArticle(final JsonObject query, Handler<AsyncResult<Integer>> resultHandler);
 
     @ProxyClose
     void close();
