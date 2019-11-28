@@ -1,9 +1,5 @@
 package io.vertx.conduit.services;
 
-import io.vertx.ext.mongo.FindOptions;
-import io.vertx.ext.mongo.UpdateOptions;
-import io.vertx.serviceproxy.ServiceProxyBuilder;
-import logging.ContextLogger;
 import io.vertx.conduit.entities.User;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
@@ -11,34 +7,34 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
+import io.vertx.serviceproxy.ServiceProxyBuilder;
+import logging.ContextLogger;
 import org.bson.types.ObjectId;
+
+import java.util.List;
 
 
 public class UserServiceImpl implements UserService {
 
     private static final Logger LOGGER = ContextLogger.create();
-    private static final String USER_COLLECTION = "users";
 
     // active user being processed
-    private final io.vertx.conduit.services.reactivex.MongoDbService mongoDbService;
-    private final FindOptions findOptions;
-    private final UpdateOptions updateOptions;
+    private final io.vertx.conduit.services.reactivex.MorphiaService morphiaService;
 
     public UserServiceImpl(Vertx vertx) {
-        ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(MongoDbService.ADDRESS);
-        MongoDbService delegate = builder.build(MongoDbService.class);
-        mongoDbService = new io.vertx.conduit.services.reactivex.MongoDbService(delegate);
-        this.findOptions = new FindOptions();
-        this.updateOptions = new UpdateOptions().setUpsert(true);
+        ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(MorphiaService.ADDRESS);
+        MorphiaService delegate = builder.build(MorphiaService.class);
+        morphiaService = new io.vertx.conduit.services.reactivex.MorphiaService(delegate);
     }
 
     @Override
     public void create(JsonObject user, Handler<AsyncResult<User>> resultHandler) {
-        mongoDbService.rxInsertOne(USER_COLLECTION, user)
+        User userEntity = new User(user);
+        morphiaService.rxCreateUser(userEntity)
                       .subscribe((id, ex) -> {
                           if (ex == null) {
-                              user.put("_id", id);
-                              resultHandler.handle(Future.succeededFuture(new User(user)));
+                              userEntity.setId(new ObjectId(id));
+                              resultHandler.handle(Future.succeededFuture(userEntity));
                           } else {
                               resultHandler.handle(Future.failedFuture(ex));
                           }
@@ -47,42 +43,45 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void getByEmail(String email, Handler<AsyncResult<User>> resultHandler) {
-        mongoDbService.rxFindOne(USER_COLLECTION, new JsonObject().put("email", email), null)
-                .subscribe((json, ex) -> handleUser(resultHandler, json, ex));
+        morphiaService.rxGetUser(new JsonObject().put("email", email))
+                .subscribe((users, ex) -> handleUser(resultHandler, users, ex));
 
     }
 
     @Override
     public void get(JsonObject query, Handler<AsyncResult<User>> resultHandler) {
 
-        mongoDbService.rxFindOne(USER_COLLECTION, query, null)
-                .subscribe((json, ex) -> handleUser(resultHandler, json, ex));
+        morphiaService.rxGetUser(query)
+                .subscribe((users, ex) -> handleUser(resultHandler, users, ex));
     }
 
     @Override
     public void getById(String id, Handler<AsyncResult<User>> resultHandler) {
 
-        mongoDbService.rxFindById(USER_COLLECTION, id, null)
-                .subscribe((json, ex) -> handleUser(resultHandler, json, ex));
+        morphiaService.rxGetUser(new JsonObject().put("_id", id))
+                .subscribe((users, ex) -> handleUser(resultHandler, users, ex));
     }
 
     @Override
     public void update(String id, JsonObject update, Handler<AsyncResult<User>> resultHandler) {
         // Have to filter on all unique fields for mongodb to replace the document instead of inserting a new one
-        mongoDbService.rxFindOneAndUpdate(USER_COLLECTION, new JsonObject().put("_id", id), update, findOptions, updateOptions)
-                .subscribe((json, ex) -> handleUser(resultHandler, json, ex));
+        morphiaService.rxUpdateUser(new JsonObject().put("_id", id), update)
+                .subscribe((users, ex) -> handleUser(resultHandler, users, ex));
     }
 
-    private static void handleUser(Handler<AsyncResult<User>> resultHandler, JsonObject json, Throwable ex) {
-        if (ex == null) {
-            resultHandler.handle(Future.succeededFuture(new User(json)));
-        } else {
-            resultHandler.handle(Future.failedFuture(ex));
+    private static void handleUser(Handler<AsyncResult<User>> resultHandler, List<User> users, Throwable ex) {
+
+        if (users.size() != 1) {
+            resultHandler.handle(Future.failedFuture(new RuntimeException("Couldn't find unique user")));
         }
-    }
+        else {
+            if (ex == null) {
+                resultHandler.handle(Future.succeededFuture(users.get(0)));
+            } else {
+                resultHandler.handle(Future.failedFuture(ex));
+            }
+        }
 
-    private JsonObject toJsonFor(User user) {
-        return null;
     }
 
     private void favorite(ObjectId articleId) {
@@ -91,10 +90,6 @@ public class UserServiceImpl implements UserService {
 
     private void unfavorite(ObjectId articleId) {
 
-    }
-
-    private boolean isFavorite(ObjectId articleId) {
-        return false;
     }
 
     private void follow(User user){

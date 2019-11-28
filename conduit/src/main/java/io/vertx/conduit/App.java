@@ -2,7 +2,7 @@ package io.vertx.conduit;
 
 import io.vertx.conduit.verticles.ArticleServiceVerticle;
 import io.vertx.conduit.verticles.HttpVerticle;
-import io.vertx.conduit.verticles.MongoDbServiceVerticle;
+import io.vertx.conduit.verticles.MorphiaServiceVerticle;
 import io.vertx.conduit.verticles.UserServiceVerticle;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
@@ -27,7 +27,7 @@ public class App extends AbstractVerticle {
                     deployVerticle(HttpVerticle.class, deploymentOptions),
                     deployVerticle(UserServiceVerticle.class, deploymentOptions),
                     deployVerticle(ArticleServiceVerticle.class, deploymentOptions),
-                    deployVerticle(MongoDbServiceVerticle.class, deploymentOptions))
+                    deployVerticle(MorphiaServiceVerticle.class, deploymentOptions))
                 .setHandler(ar2 -> {
                     if (ar2.succeeded()) {
                         LOGGER.info("Successfully deployed verticals.");
