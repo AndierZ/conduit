@@ -7,6 +7,8 @@ import io.vertx.core.json.JsonObject;
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Pattern;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Entity("users")
@@ -23,18 +25,20 @@ public class User extends Base {
 
     @NotEmpty
     @Pattern(regexp="[a-zA-Z0-9]+")
-    String username;
+    private String username;
 
     @NotEmpty
     @Email
-    String email;
+    private String email;
 
     @NotEmpty
-    String password;
+    private String password;
 
-    String bio;
+    private String bio;
 
-    String image;
+    private String image;
+
+    private final List<String> favorites = new ArrayList<>();
 
     public void setUsername(String username) {
         this.username = username;
@@ -107,4 +111,13 @@ public class User extends Base {
 
         return retJson;
     }
+
+    public List<String> getFavorites() {
+        return favorites;
+    }
+
+    public boolean isFavorite(String id) {
+        return this.favorites.contains(id);
+    }
+
 }

@@ -81,22 +81,16 @@ public class UserServiceImpl implements UserService {
                 resultHandler.handle(Future.failedFuture(ex));
             }
         }
-
     }
 
-    private void favorite(ObjectId articleId) {
-
-    }
-
-    private void unfavorite(ObjectId articleId) {
-
-    }
-
-    private void follow(User user){
-
-    }
-
-    private void unfollow(User user) {
-
+    public void getFavoriteCount(String id, Handler<AsyncResult<Integer>> resultHandler){
+        morphiaService.rxGetUser(new JsonObject().put("favorites", new JsonObject().put("$in", new ObjectId(id))))
+                      .subscribe((users, ex) -> {
+                          if (ex == null) {
+                              resultHandler.handle(Future.succeededFuture(users.size()));
+                          } else {
+                              resultHandler.handle(Future.failedFuture(ex));
+                          }
+                      });
     }
 }

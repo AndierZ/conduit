@@ -9,11 +9,13 @@ import io.vertx.conduit.services.UserService;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
 import logging.ContextLogger;
+import org.bson.types.ObjectId;
 import routerutils.BaseHandler;
 import routerutils.RouteConfig;
 
@@ -135,5 +137,75 @@ public class ArticleHandler extends BaseHandler {
         } else {
             event.fail(new RuntimeException("Invalid user"));
         }
+    }
+
+    @RouteConfig(path="/:article/favorite", method=HttpMethod.POST, middlewares = {"extractArticle", "extractUser"})
+    private void favorite(RoutingContext event) {
+        Article article = event.get("article");
+        User user = event.get("user");
+        if (!user.getFavorites().contains(article.getSlug())) {
+            user.getFavorites().add(article.getSlug());
+        } else {
+            event.response()
+                    .setStatusCode(HttpResponseStatus.OK.code())
+                    .end(Json.encodePrettily(article.toJsonFor(user)));
+            return;
+        }
+        JsonObject update = new JsonObject();
+        JsonArray array = new JsonArray();
+        user.getFavorites().forEach(array::add);
+        update.put("favorites", array);
+
+        userService.rxUpdate(user.getId().toHexString(), update)
+                   .flatMap(ignored -> {
+                       return userService.rxGetFavoriteCount(article.getId().toHexString());
+                   })
+                   .flatMap(count -> {
+                       article.setFavoritesCount(count);
+                       return articleService.rxUpdate(article.getSlug(), new JsonObject().put("favoritesCount", count));
+                   }).subscribe((updatedArticle, ex) -> {
+                       if (ex == null) {
+                           event.response()
+                                   .setStatusCode(HttpResponseStatus.OK.code())
+                                   .end(Json.encodePrettily(updatedArticle.toJsonFor(user)));
+                       } else {
+                           event.fail(ex);
+                       }
+        });
+    }
+
+    @RouteConfig(path="/:article/favorite", method=HttpMethod.DELETE, middlewares = {"extractArticle", "extractUser"})
+    private void unfavorite(RoutingContext event) {
+        Article article = event.get("article");
+        User user = event.get("user");
+        if (user.getFavorites().contains(article.getSlug())) {
+            user.getFavorites().remove(article.getSlug());
+        } else {
+            event.response()
+                    .setStatusCode(HttpResponseStatus.OK.code())
+                    .end(Json.encodePrettily(article.toJsonFor(user)));
+            return;
+        }
+        JsonObject update = new JsonObject();
+        JsonArray array = new JsonArray();
+        user.getFavorites().forEach(array::add);
+        update.put("favorites", array);
+
+        userService.rxUpdate(user.getId().toHexString(), update)
+                .flatMap(ignored -> {
+                    return userService.rxGetFavoriteCount(article.getId().toHexString());
+                })
+                .flatMap(count -> {
+                    article.setFavoritesCount(count);
+                    return articleService.rxUpdate(article.getSlug(), new JsonObject().put("favoritesCount", count));
+                }).subscribe((updatedArticle, ex) -> {
+            if (ex == null) {
+                event.response()
+                        .setStatusCode(HttpResponseStatus.OK.code())
+                        .end(Json.encodePrettily(updatedArticle.toJsonFor(user)));
+            } else {
+                event.fail(ex);
+            }
+        });
     }
 }

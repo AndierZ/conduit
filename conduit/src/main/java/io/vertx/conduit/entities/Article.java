@@ -118,6 +118,7 @@ public class Article extends Base {
     public JsonObject toJsonFor(User user) {
         JsonObject json = toJson();
         json.put("author", author.toProfileJsonFor(user));
+        json.put("favorited", user.isFavorite(getSlug()));
         return json;
     }
 }

@@ -21,4 +21,6 @@ public interface UserService {
     void getByEmail(String email, Handler<AsyncResult<User>> resultHandler);
 
     void update(String id, JsonObject update, Handler<AsyncResult<User>> resultHandler);
+
+    void getFavoriteCount(String id, Handler<AsyncResult<Integer>> resultHandler);
 }
