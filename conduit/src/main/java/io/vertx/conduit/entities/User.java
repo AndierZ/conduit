@@ -9,7 +9,8 @@ import javax.validation.constraints.NotEmpty;
 
 
 @Entity("users")
-@Indexes(@Index(fields = { @Field("username"), @Field("email") }, options = @IndexOptions(unique = true)))
+@Indexes({@Index(fields = { @Field("username") }, options = @IndexOptions(unique = true)),
+          @Index(fields = { @Field("email") }, options = @IndexOptions(unique = true))})
 @DataObject(generateConverter = true)
 public class User extends Base {
 

@@ -3,7 +3,6 @@ package io.vertx.conduit.entities;
 import dev.morphia.annotations.*;
 import io.vertx.codegen.annotations.DataObject;
 import io.vertx.core.json.JsonObject;
-import jdk.nashorn.internal.ir.annotations.Reference;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
@@ -36,7 +35,7 @@ public class Article extends Base {
 
     private int favoritesCount;
 
-    @Reference
+    @Reference (idOnly = true, lazy = true)
     @Valid
     private User author;
 
