@@ -24,7 +24,9 @@
 20. Add unit test for mongodb service
 21. Use Morphia in mongodb service
 22. Create Morphia service
-23. Make sure Morphia annotation works regarding index and validation
+
+Make sure Morphia annotation works regarding index and validation
+Use Morphia service in handlers
 
 CRUD articles
 CRUD comments

@@ -6,17 +6,15 @@ import dev.morphia.Key;
 import dev.morphia.Morphia;
 import dev.morphia.query.Query;
 import dev.morphia.query.UpdateOperations;
-import dev.morphia.query.UpdateResults;
-import dev.morphia.query.internal.MorphiaCursor;
 import io.vertx.conduit.entities.Article;
 import io.vertx.conduit.entities.Base;
+import io.vertx.conduit.entities.Comment;
 import io.vertx.conduit.entities.User;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
-import io.vertx.ext.mongo.MongoClientDeleteResult;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
@@ -35,7 +33,9 @@ public class MorphiaServiceImpl implements MorphiaService {
         this.vertx = vertx;
         this.mongoClient = new MongoClient(dbConfig.getString("host"), dbConfig.getInteger("port"));
         this.morphia = new Morphia();
-        this.morphia.mapPackage(dbConfig.getString("entityPackage"));
+        this.morphia.map(User.class);
+        this.morphia.map(Article.class);
+        this.morphia.map(Comment.class);
         this.datastore = morphia.createDatastore(mongoClient, dbConfig.getString("db_name"));
 
         vertx.executeBlocking(future -> {

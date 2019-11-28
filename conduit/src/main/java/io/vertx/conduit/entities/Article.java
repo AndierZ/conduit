@@ -14,6 +14,8 @@ import java.util.List;
 @DataObject(generateConverter = true)
 public class Article extends Base {
 
+    public Article(){}
+
     public Article(JsonObject jsonObject) {
         fromJson(jsonObject);
     }

@@ -31,7 +31,7 @@ public class MorphiaServiceTest {
     public void setup(TestContext tc) {
         this.vertx = Vertx.vertx();
         JsonObject config = new JsonObject().put("db_name", "conduit_test")
-                .put("host", "localhost").put("port", 27017).put("entityPackage", "io.vertx.conduit.entitiesÎ");
+                .put("host", "localhost").put("port", 27017).put("entityPackage", "io.vertx.conduit.entities");
         MorphiaServiceImpl delegate = new MorphiaServiceImpl(vertx, config, tc.asyncAssertSuccess());
         this.morphiaService = new io.vertx.conduit.services.reactivex.MorphiaService(delegate);
     }
