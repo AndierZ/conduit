@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonObject;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
 
 
 @Entity("users")
@@ -21,6 +22,7 @@ public class User extends Base {
     }
 
     @NotEmpty
+    @Pattern(regexp="[a-zA-Z0-9]+")
     String username;
 
     @NotEmpty

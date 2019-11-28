@@ -27,7 +27,11 @@ dependencies{
     compile group: 'com.github.slugify', name: 'slugify', version: '2.2'
     compile group: 'org.springframework.security', name: 'spring-security-crypto', version: '3.1.0.RELEASE'
     compile group: 'dev.morphia.morphia', name: 'core', version: '1.5.8'
+    compile group: 'dev.morphia.morphia', name: 'validation', version: '1.5.8'
+    compile group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
     compile group: 'org.hibernate', name: 'hibernate-validator', version: '6.1.0.Final'
+    compile group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
+    compile group: 'org.glassfish', name: 'javax.el', version: '3.0.0'
     compileOnly group: 'io.vertx', name: 'vertx-codegen'
     compile project (':common')
 

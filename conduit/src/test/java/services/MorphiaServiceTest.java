@@ -22,8 +22,6 @@ import static org.junit.Assert.*;
 @RunWith(VertxUnitRunner.class)
 public class MorphiaServiceTest {
 
-    private static Logger LOGGER = ContextLogger.create();
-
     private Vertx vertx;
     private MorphiaService morphiaService;
 
@@ -48,7 +46,6 @@ public class MorphiaServiceTest {
 
         this.morphiaService.rxCreateUser(user)
            .flatMap(id -> {
-              LOGGER.info("Successfully created document with id " + id);
               user.setId(new ObjectId(id));
               return this.morphiaService.rxGetUser(new JsonObject().put("_id", user.getId().toHexString()));
            }).flatMap(users -> {
@@ -71,13 +68,63 @@ public class MorphiaServiceTest {
     }
 
     @Test
-    public void UserDupe(TestContext tc) throws InterruptedException {
+    public void userInvalid(TestContext tc) {
         Async async1 = tc.async();
         Async async2 = tc.async();
         Async async3 = tc.async();
         Async async4 = tc.async();
 
-        System.out.println("Test writing user");
+        User user = new User();
+        user.setPassword("123");
+        user.setBio("abc");
+
+        this.morphiaService.rxCreateUser(user)
+                .subscribe((id, e) -> {
+                    if (e == null) {
+                        tc.fail("User should not be created");
+                    } else {
+                        async1.complete();
+                    }
+                });
+
+        user.setUsername("xyz");
+        this.morphiaService.rxCreateUser(user)
+                .subscribe((id, e) -> {
+                    if (e == null) {
+                        tc.fail("User should not be created");
+                    } else {
+                        async2.complete();
+                    }
+                });
+
+        user.setEmail("123");
+        this.morphiaService.rxCreateUser(user)
+                .subscribe((id, e) -> {
+                    if (e == null) {
+                        tc.fail("User should not be created");
+                    } else {
+                        async3.complete();
+                    }
+                });
+
+        user.setEmail("123@xyz.com");
+        user.setUsername("#*$");
+        this.morphiaService.rxCreateUser(user)
+                .subscribe((id, e) -> {
+                    if (e == null) {
+                        tc.fail("User should not be created");
+                    } else {
+                        async4.complete();
+                    }
+                });
+    }
+
+    @Test
+    public void userDupe(TestContext tc) throws InterruptedException {
+        Async async1 = tc.async();
+        Async async2 = tc.async();
+        Async async3 = tc.async();
+        Async async4 = tc.async();
 
         User user = new User();
         user.setPassword("123");

@@ -4,6 +4,7 @@ import com.mongodb.MongoClient;
 import dev.morphia.Datastore;
 import dev.morphia.Key;
 import dev.morphia.Morphia;
+import dev.morphia.ValidationExtension;
 import dev.morphia.query.Query;
 import dev.morphia.query.UpdateOperations;
 import io.vertx.conduit.entities.Article;
@@ -37,6 +38,8 @@ public class MorphiaServiceImpl implements MorphiaService {
         this.morphia.map(Article.class);
         this.morphia.map(Comment.class);
         this.datastore = morphia.createDatastore(mongoClient, dbConfig.getString("db_name"));
+
+        new ValidationExtension(morphia);
 
         vertx.executeBlocking(future -> {
             try {
