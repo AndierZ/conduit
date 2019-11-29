@@ -1,5 +1,6 @@
 package io.vertx.conduit.services;
 
+import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;
 import dev.morphia.Datastore;
 import dev.morphia.Key;
@@ -116,6 +117,19 @@ public class MorphiaServiceImpl implements MorphiaService {
     @Override
     public void deleteComment(JsonObject query, Handler<AsyncResult<Integer>> resultHandler) {
         delete(Comment.class, query, resultHandler);
+    }
+
+    @Override
+    public void queryTags(Handler<AsyncResult<List<String>>> resultHandler) {
+        vertx.executeBlocking(future -> {
+            future.complete(datastore.getCollection(Article.class).distinct("TagList"));
+        }, res -> {
+            if (res.succeeded()) {
+                resultHandler.handle(Future.succeededFuture((List<String>)res.result()));
+            } else {
+                resultHandler.handle(Future.failedFuture(res.cause()));
+            }
+        });
     }
 
     public <T extends Base> void update(final Class<T> clazz, final JsonObject query, final JsonObject update, final Handler<AsyncResult<List<T>>> resultHandler) {

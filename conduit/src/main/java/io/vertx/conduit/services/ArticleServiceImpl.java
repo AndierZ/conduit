@@ -50,7 +50,11 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public void delete(String slug, Handler<AsyncResult<Void>> resultHandler) {
+    public void getTags(Handler<AsyncResult<String>> resultHandler) {
+    }
+
+    @Override
+    public void delete(String slug, Handler<AsyncResult<Integer>> resultHandler) {
         morphiaService.rxDeleteArticle(new JsonObject().put("slug", slug))
                 .subscribe((res, ex) -> {
                     if (ex == null) {

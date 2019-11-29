@@ -15,7 +15,6 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
-import javafx.util.Pair;
 import routerutils.BaseHandler;
 import routerutils.RouteConfig;
 

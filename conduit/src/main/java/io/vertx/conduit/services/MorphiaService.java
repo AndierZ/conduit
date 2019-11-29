@@ -46,6 +46,8 @@ public interface MorphiaService {
 
     void deleteComment(final JsonObject query, Handler<AsyncResult<Integer>> resultHandler);
 
+    void queryTags(Handler<AsyncResult<List<String>>> resultHandler);
+
     @ProxyClose
     void close();
 }

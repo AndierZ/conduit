@@ -31,11 +31,13 @@
 27. add favorite/unfavorite
 28. CRUD comments
 29. add follow/unfollow
+30. add tags
 
-add tags
 add query routes
 better deal with event.fail(e), instead of just showing internal server error?
 base handler to populate base fields (create time/update time and etc?)
+
+add unit tests
 
 security review
 Create docker for each separate each verticle as its own process/service
