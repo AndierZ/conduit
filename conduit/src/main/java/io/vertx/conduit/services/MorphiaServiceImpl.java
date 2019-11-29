@@ -69,12 +69,22 @@ public class MorphiaServiceImpl implements MorphiaService {
     }
 
     @Override
+    public void getComment(JsonObject query, Handler<AsyncResult<List<Comment>>> resultHandler) {
+        find(Comment.class, query, resultHandler);
+    }
+
+    @Override
     public void createUser(User entity, final Handler<AsyncResult<String>> resultHandler) {
         save(entity, resultHandler);
     }
 
     @Override
     public void createArticle(Article entity, Handler<AsyncResult<String>> resultHandler) {
+        save(entity, resultHandler);
+    }
+
+    @Override
+    public void createComment(Comment entity, Handler<AsyncResult<String>> resultHandler) {
         save(entity, resultHandler);
     }
 
@@ -89,6 +99,11 @@ public class MorphiaServiceImpl implements MorphiaService {
     }
 
     @Override
+    public void updateComment(JsonObject query, JsonObject update, Handler<AsyncResult<List<Comment>>> resultHandler) {
+        update(Comment.class, query, update, resultHandler);
+    }
+
+    @Override
     public void deleteUser(JsonObject query, Handler<AsyncResult<Integer>> resultHandler) {
         delete(User.class, query, resultHandler);
     }
@@ -98,12 +113,18 @@ public class MorphiaServiceImpl implements MorphiaService {
         delete(Article.class, query, resultHandler);
     }
 
+    @Override
+    public void deleteComment(JsonObject query, Handler<AsyncResult<Integer>> resultHandler) {
+        delete(Comment.class, query, resultHandler);
+    }
+
     public <T extends Base> void update(final Class<T> clazz, final JsonObject query, final JsonObject update, final Handler<AsyncResult<List<T>>> resultHandler) {
         vertx.executeBlocking(future -> {
             Query<T> updateQuery = datastore.createQuery(clazz);
 
             for(Iterator<Map.Entry<String, Object>> it = query.iterator(); it.hasNext();) {
                 Map.Entry<String, Object> pair = it.next();
+
                 if ("_id".equals(pair.getKey())) {
                     updateQuery.filter("_id", new ObjectId(pair.getValue().toString()));
                 } else {
@@ -114,7 +135,23 @@ public class MorphiaServiceImpl implements MorphiaService {
             final UpdateOperations<T> updateOperations = datastore.createUpdateOperations(clazz);
             for(Iterator<Map.Entry<String, Object>> it = update.iterator(); it.hasNext();) {
                 Map.Entry<String, Object> pair = it.next();
-                updateOperations.set(pair.getKey(), pair.getValue());
+                if(pair.getKey().charAt(0) == '$' && pair.getValue() instanceof JsonObject) {
+                    if ("$push".equals(pair.getKey())) {
+                        JsonObject fields = (JsonObject) pair.getValue();
+                        for(Iterator<Map.Entry<String, Object>> it2 = fields.iterator(); it.hasNext(); ) {
+                            Map.Entry<String, Object> field = it2.next();
+                            updateOperations.addToSet(field.getKey(), field.getValue());
+                        }
+                    } else if ("$pop".equals(pair.getKey())) {
+                        JsonObject fields = (JsonObject) pair.getValue();
+                        for(Iterator<Map.Entry<String, Object>> it2 = fields.iterator(); it.hasNext(); ) {
+                            Map.Entry<String, Object> field = it2.next();
+                            updateOperations.removeAll(field.getKey(), field.getValue());
+                        }
+                    }
+                } else {
+                    updateOperations.set(pair.getKey(), pair.getValue());
+                }
             }
 
             datastore.update(updateQuery, updateOperations);

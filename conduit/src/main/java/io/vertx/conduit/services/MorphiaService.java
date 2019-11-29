@@ -4,6 +4,7 @@ import io.vertx.codegen.annotations.ProxyClose;
 import io.vertx.codegen.annotations.ProxyGen;
 import io.vertx.codegen.annotations.VertxGen;
 import io.vertx.conduit.entities.Article;
+import io.vertx.conduit.entities.Comment;
 import io.vertx.conduit.entities.User;
 import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
@@ -25,17 +26,25 @@ public interface MorphiaService {
 
     void getArticle(final JsonObject query, Handler<AsyncResult<List<Article>>> resultHandler);
 
+    void getComment(final JsonObject query, Handler<AsyncResult<List<Comment>>> resultHandler);
+
     void createUser(User entity, final Handler<AsyncResult<String>> resultHandler);
 
     void createArticle(Article entity, final Handler<AsyncResult<String>> resultHandler);
+
+    void createComment(Comment entity, final Handler<AsyncResult<String>> resultHandler);
 
     void updateUser(final JsonObject query, final JsonObject update, final Handler<AsyncResult<List<User>>> resultHandler);
 
     void updateArticle(final JsonObject query, final JsonObject update, final Handler<AsyncResult<List<Article>>> resultHandler);
 
+    void updateComment(final JsonObject query, final JsonObject update, final Handler<AsyncResult<List<Comment>>> resultHandler);
+
     void deleteUser(final JsonObject query, Handler<AsyncResult<Integer>> resultHandler);
 
     void deleteArticle(final JsonObject query, Handler<AsyncResult<Integer>> resultHandler);
+
+    void deleteComment(final JsonObject query, Handler<AsyncResult<Integer>> resultHandler);
 
     @ProxyClose
     void close();

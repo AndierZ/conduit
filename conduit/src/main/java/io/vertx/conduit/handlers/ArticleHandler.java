@@ -3,19 +3,19 @@ package io.vertx.conduit.handlers;
 import com.github.slugify.Slugify;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.conduit.entities.Article;
+import io.vertx.conduit.entities.Comment;
 import io.vertx.conduit.entities.User;
 import io.vertx.conduit.services.ArticleService;
+import io.vertx.conduit.services.CommentService;
 import io.vertx.conduit.services.UserService;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
-import logging.ContextLogger;
-import org.bson.types.ObjectId;
+import javafx.util.Pair;
 import routerutils.BaseHandler;
 import routerutils.RouteConfig;
 
@@ -25,11 +25,12 @@ import java.util.Objects;
 public class ArticleHandler extends BaseHandler {
 
     private static final String ARTICLE = "article";
-    private static Logger LOGGER = ContextLogger.create();
+    private static final String COMMENT = "comment";
 
     private final io.vertx.conduit.services.reactivex.ArticleService articleService;
     private final Slugify slugify;
     private final io.vertx.conduit.services.reactivex.UserService userService;
+    private final io.vertx.conduit.services.reactivex.CommentService commentService;
 
     public ArticleHandler(Vertx vertx) {
         super(vertx);
@@ -43,6 +44,12 @@ public class ArticleHandler extends BaseHandler {
             ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(UserService.ADDRESS);
             UserService delegate = builder.build(UserService.class);
             this.userService = new io.vertx.conduit.services.reactivex.UserService(delegate);
+        }
+
+        {
+            ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(CommentService.ADDRESS);
+            CommentService delegate = builder.build(CommentService.class);
+            this.commentService = new io.vertx.conduit.services.reactivex.CommentService(delegate);
         }
 
         this.slugify = new Slugify();
@@ -75,6 +82,19 @@ public class ArticleHandler extends BaseHandler {
                            event.fail(ex);
                        }
                    });
+    }
+
+    public void extractComment(RoutingContext event) {
+        String commentId = event.request().getParam("comment");
+        commentService.rxGet(commentId)
+                .subscribe((comment, ex) -> {
+                    if (ex == null) {
+                        event.put("comment", comment);
+                        event.next();
+                    } else {
+                        event.fail(ex);
+                    }
+                });
     }
 
     @RouteConfig(path="/", method= HttpMethod.POST, middlewares = "extractUser")
@@ -151,10 +171,7 @@ public class ArticleHandler extends BaseHandler {
                     .end(Json.encodePrettily(article.toJsonFor(user)));
             return;
         }
-        JsonObject update = new JsonObject();
-        JsonArray array = new JsonArray();
-        user.getFavorites().forEach(array::add);
-        update.put("favorites", array);
+        JsonObject update = new JsonObject().put("$push", new JsonObject().put("favorites", article.getSlug()));
 
         userService.rxUpdate(user.getId().toHexString(), update)
                    .flatMap(ignored -> {
@@ -186,10 +203,7 @@ public class ArticleHandler extends BaseHandler {
                     .end(Json.encodePrettily(article.toJsonFor(user)));
             return;
         }
-        JsonObject update = new JsonObject();
-        JsonArray array = new JsonArray();
-        user.getFavorites().forEach(array::add);
-        update.put("favorites", array);
+        JsonObject update = new JsonObject().put("$pop", new JsonObject().put("favorites", article.getSlug()));
 
         userService.rxUpdate(user.getId().toHexString(), update)
                 .flatMap(ignored -> {
@@ -207,5 +221,73 @@ public class ArticleHandler extends BaseHandler {
                 event.fail(ex);
             }
         });
+    }
+
+    @RouteConfig(path="/:article/comments", method= HttpMethod.POST, middlewares = {"extractUser", "extractArticle"})
+    public void createComment(RoutingContext event) {
+        User user = event.get("user");
+        Article article = event.get("article");
+
+        JsonObject message = event.getBodyAsJson().getJsonObject(COMMENT);
+        message.put("author", user.toJson());
+        message.put("article", article.toJson());
+
+        JsonObject update = new JsonObject().put("$push", new JsonObject().put("comments", message));
+
+
+        commentService.rxCreate(message)
+                      .zipWith(articleService.rxUpdate(article.getSlug(), update), (comment, updatedArticle) -> {
+                          return comment;
+                      }).subscribe((comment, ex) -> {
+                            if (ex == null) {
+                                event.response()
+                                        .setStatusCode(HttpResponseStatus.OK.code())
+                                        .end(Json.encodePrettily(comment.toJsonFor(user)));
+                            } else {
+                                event.fail(ex);
+                            }
+                      });
+    }
+
+    @RouteConfig(path="/:article/comments", method= HttpMethod.GET, middlewares = {"extractUser", "extractArticle"})
+    public void getComments(RoutingContext event) {
+        User user = event.get("user");
+        Article article = event.get("article");
+
+        JsonObject comments = new JsonObject();
+        JsonArray array = new JsonArray();
+        article.getComments().forEach(x -> array.add(x.toJsonFor(user)));
+        comments.put("comments", array);
+
+        event.response()
+                .setStatusCode(HttpResponseStatus.OK.code())
+                .end(Json.encodePrettily(comments));
+    }
+
+    @RouteConfig(path="/:article/comments/:comment", method= HttpMethod.DELETE, middlewares = {"extractUser", "extractComment", "extractArticle"})
+    public void deleteComment(RoutingContext event) {
+        User user = event.get("user");
+        Article article = event.get("article");
+        Comment comment = event.get("comment");
+
+        if (comment.getAuthor().getId().equals(user.getId())) {
+            JsonObject update = new JsonObject().put("$pop", new JsonObject().put("comments", comment.toJson()));
+            articleService.rxUpdate(article.getSlug(), update)
+            .flatMap(ignored -> {
+                return commentService.rxDelete(comment.getId().toHexString());
+            })
+            .subscribe((ignored, ex) -> {
+                if (ex == null) {
+                    event.response()
+                            .setStatusCode(HttpResponseStatus.NO_CONTENT.code())
+                            .end();
+                } else {
+                    event.fail(ex);
+                }
+            });
+
+        } else {
+            event.fail(new RuntimeException("Invalid user"));
+        }
     }
 }

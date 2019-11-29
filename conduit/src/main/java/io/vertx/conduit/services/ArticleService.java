@@ -15,9 +15,9 @@ public interface ArticleService {
 
     void create(JsonObject article, Handler<AsyncResult<Article>> resultHandler);
 
-    void update(String slug, JsonObject article, Handler<AsyncResult<Article>> resultHandler);
+    void update(String slug, JsonObject update, Handler<AsyncResult<Article>> resultHandler);
 
     void get(String slug, Handler<AsyncResult<Article>> resultHandler);
 
-    void delete(String slug, Handler<AsyncResult<Void>> resultHandler);
+    void delete(String slug, Handler<AsyncResult<Integer>> resultHandler);
 }

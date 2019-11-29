@@ -43,6 +43,10 @@ public class Article extends Base {
         return slug;
     }
 
+    @Reference (idOnly = true, lazy = true)
+    @Valid
+    private List<Comment> comments;
+
     public void setSlug(String slug) {
         this.slug = slug;
     }
@@ -120,5 +124,9 @@ public class Article extends Base {
         json.put("author", author.toProfileJsonFor(user));
         json.put("favorited", user.isFavorite(getSlug()));
         return json;
+    }
+
+    public List<Comment> getComments() {
+        return comments;
     }
 }

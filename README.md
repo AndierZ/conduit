@@ -26,13 +26,12 @@
 22. Create Morphia service
 23. Make sure Morphia annotation works regarding index and validation
 24. Use validation framework with annotations
+25. Use Morphia service in handlers
+26. CRUD articles
+27. add favorite/unfavorite
+28. CRUD comments
 
-Use Morphia service in handlers
-
-CRUD articles
-CRUD comments
 add follow/unfollow
-add favorite/unfavorite
 add tags
 add query routes
 better deal with event.fail(e), instead of just showing internal server error?
