@@ -40,6 +40,9 @@ public class User extends Base {
 
     private final List<String> favorites = new ArrayList<>();
 
+    @Reference (idOnly = true, lazy = true)
+    private final List<User> following = new ArrayList<>();
+
     public void setUsername(String username) {
         this.username = username;
     }
@@ -107,17 +110,34 @@ public class User extends Base {
         retJson.put("bio", bio);
         retJson.put("image", image);
         retJson.put("username", username);
-        retJson.put("following", false);
+        retJson.put("following", user.isFollowing(this));
 
         return retJson;
     }
 
-    public List<String> getFavorites() {
-        return favorites;
+    public void addFavorite(String slug) {
+        favorites.add(slug);
+    }
+
+    public void removeFavorite(String slug) {
+        favorites.remove(slug);
     }
 
     public boolean isFavorite(String id) {
         return this.favorites.contains(id);
     }
 
+    public void follow(User user) {
+        if (!this.following.contains(user)) {
+            this.following.add(user);
+        }
+    }
+
+    public void unfollow(User user) {
+        this.following.remove(user);
+    }
+
+    public boolean isFollowing(User user) {
+        return this.following.contains(user);
+    }
 }

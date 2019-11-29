@@ -7,11 +7,13 @@ import io.vertx.core.json.JsonObject;
 import org.bson.types.ObjectId;
 
 import java.io.Serializable;
+import java.util.Objects;
 
 @Entity
 public abstract class Base implements Serializable {
     @Id
     private ObjectId id;
+
     @Version
     private long version;
     private String createdBy;
@@ -85,5 +87,18 @@ public abstract class Base implements Serializable {
 
     public void setVersion(long version) {
         this.version = version;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof Base)) return false;
+        Base base = (Base) o;
+        return id.equals(base.id);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(id);
     }
 }

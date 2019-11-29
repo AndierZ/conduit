@@ -1,6 +1,7 @@
 package io.vertx.conduit.handlers;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.vertx.conduit.entities.User;
 import io.vertx.conduit.services.UserService;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -88,21 +89,75 @@ public class UserHandler extends BaseHandler {
                 .subscribe((res, ex) -> handleResponse(event, res.toAuthJson(), ex, HttpResponseStatus.OK));
     }
 
-    @RouteConfig(path="/:username", authRequired = false)
+    public void extractProfile(RoutingContext event) {
+        String username = event.request().getParam("username");
+        userService.rxGet(new JsonObject().put("username", username))
+                .subscribe((user, ex) -> {
+                    if (ex == null) {
+                        event.put("profile", user);
+                        event.next();
+                    } else {
+                        event.fail(ex);
+                    }
+                });
+    }
+
+    @RouteConfig(path="/:username", authRequired = false, middlewares = "extractProfile")
     public void getProfile(RoutingContext event) {
 
-        String username = event.request().getParam("username");
+        User profile = event.get("profile");
         String queryingUserId = event.get("userId");
         if (queryingUserId != null) {
 
             userService.rxGetById(queryingUserId)
-                       .zipWith(userService.rxGet(new JsonObject().put("username", username)), (queryingUser, user) -> user.toProfileJsonFor(queryingUser))
+                       .map(queryingUser -> profile.toProfileJsonFor(queryingUser))
                        .subscribe((json, ex) -> handleResponse(event, json, ex, HttpResponseStatus.OK));
 
         } else {
-            userService.rxGet(new JsonObject().put("username", username))
-                    .map(user -> user.toProfileJsonFor(null))
-                    .subscribe((json, ex) -> handleResponse(event, json, ex, HttpResponseStatus.OK));
+            JsonObject json = profile.toProfileJsonFor(null);
+            handleResponse(event, json, null, HttpResponseStatus.OK);
         }
+    }
+
+    public void extractUser(RoutingContext event) {
+        userService.rxGetById(event.get("userId"))
+                .subscribe((user, ex) -> {
+                    if (ex == null) {
+                        event.put("user", user);
+                        event.next();
+                    } else {
+                        event.fail(ex);
+                    }
+                });
+    }
+
+    @RouteConfig(path="/:username/follow", method = HttpMethod.POST, middlewares = {"extractProfile", "extractUser"})
+    public void follow(RoutingContext event) {
+
+        User profileUser = event.get("profile");
+        User queryingUser = event.get("user");
+
+        queryingUser.follow(profileUser);
+        JsonObject update = new JsonObject().put("$push", new JsonObject().put("following", profileUser.toJson()));
+        userService.rxUpdate(queryingUser.getId().toHexString(), update)
+                   .map(user -> new JsonObject().put("", profileUser.toProfileJsonFor(queryingUser)))
+                    .subscribe((json, ex) -> {
+                        handleResponse(event, json, ex, HttpResponseStatus.OK);
+                    });
+    }
+
+    @RouteConfig(path="/:username/follow", method = HttpMethod.DELETE, middlewares = {"extractProfile", "extractUser"})
+    public void unfollow(RoutingContext event) {
+
+        User profileUser = event.get("profile");
+        User queryingUser = event.get("user");
+
+        queryingUser.unfollow(profileUser);
+        JsonObject update = new JsonObject().put("$pop", new JsonObject().put("following", profileUser.toJson()));
+        userService.rxUpdate(queryingUser.getId().toHexString(), update)
+                .map(user -> new JsonObject().put("", profileUser.toProfileJsonFor(queryingUser)))
+                .subscribe((json, ex) -> {
+                    handleResponse(event, json, ex, HttpResponseStatus.OK);
+                });
     }
 }

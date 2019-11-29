@@ -163,8 +163,8 @@ public class ArticleHandler extends BaseHandler {
     private void favorite(RoutingContext event) {
         Article article = event.get("article");
         User user = event.get("user");
-        if (!user.getFavorites().contains(article.getSlug())) {
-            user.getFavorites().add(article.getSlug());
+        if (!user.isFavorite(article.getSlug())) {
+            user.addFavorite(article.getSlug());
         } else {
             event.response()
                     .setStatusCode(HttpResponseStatus.OK.code())
@@ -195,8 +195,8 @@ public class ArticleHandler extends BaseHandler {
     private void unfavorite(RoutingContext event) {
         Article article = event.get("article");
         User user = event.get("user");
-        if (user.getFavorites().contains(article.getSlug())) {
-            user.getFavorites().remove(article.getSlug());
+        if (user.isFavorite(article.getSlug())) {
+            user.removeFavorite(article.getSlug());
         } else {
             event.response()
                     .setStatusCode(HttpResponseStatus.OK.code())
