@@ -17,8 +17,8 @@ public abstract class Base implements Serializable {
     @Version
     private long version;
     private String createdBy;
-    private long createdTime;
-    private long updatedTime;
+    private long createTime;
+    private long updateTime;
     private String updatedBy;
     private boolean isActive;
 
@@ -38,20 +38,20 @@ public abstract class Base implements Serializable {
         this.createdBy = createdBy;
     }
 
-    public long getCreatedTime() {
-        return createdTime;
+    public long getCreateTime() {
+        return createTime;
     }
 
-    public void setCreatedTime(long createdTime) {
-        this.createdTime = createdTime;
+    public void setCreateTime(long createTime) {
+        this.createTime = createTime;
     }
 
-    public long getUpdatedTime() {
-        return updatedTime;
+    public long getUpdateTime() {
+        return updateTime;
     }
 
-    public void setUpdatedTime(long updatedTime) {
-        this.updatedTime = updatedTime;
+    public void setUpdateTime(long updateTime) {
+        this.updateTime = updateTime;
     }
 
     public String getUpdatedBy() {

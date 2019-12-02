@@ -32,10 +32,14 @@
 28. CRUD comments
 29. add follow/unfollow
 30. add tags
+31. add query routes
 
-add query routes
-better deal with event.fail(e), instead of just showing internal server error?
+add annotation for middle ware methods
 base handler to populate base fields (create time/update time and etc?)
+
+
+better deal with event.fail(e), instead of just showing internal server error?
+
 
 add unit tests
 

@@ -7,6 +7,8 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Handler;
 import io.vertx.core.json.JsonObject;
 
+import java.util.List;
+
 @VertxGen
 @ProxyGen
 public interface ArticleService {
@@ -20,6 +22,4 @@ public interface ArticleService {
     void get(String slug, Handler<AsyncResult<Article>> resultHandler);
 
     void delete(String slug, Handler<AsyncResult<Integer>> resultHandler);
-
-    void getTags(Handler<AsyncResult<String>> resultHandler);
 }

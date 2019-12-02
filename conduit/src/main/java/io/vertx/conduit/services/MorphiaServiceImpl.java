@@ -1,13 +1,11 @@
 package io.vertx.conduit.services;
 
-import com.mongodb.DBCollection;
 import com.mongodb.MongoClient;
 import dev.morphia.Datastore;
 import dev.morphia.Key;
 import dev.morphia.Morphia;
 import dev.morphia.ValidationExtension;
-import dev.morphia.query.Query;
-import dev.morphia.query.UpdateOperations;
+import dev.morphia.query.*;
 import io.vertx.conduit.entities.Article;
 import io.vertx.conduit.entities.Base;
 import io.vertx.conduit.entities.Comment;
@@ -16,13 +14,16 @@ import io.vertx.core.AsyncResult;
 import io.vertx.core.Future;
 import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
+import javafx.util.Pair;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class MorphiaServiceImpl implements MorphiaService {
 
@@ -126,6 +127,92 @@ public class MorphiaServiceImpl implements MorphiaService {
         }, res -> {
             if (res.succeeded()) {
                 resultHandler.handle(Future.succeededFuture((List<String>)res.result()));
+            } else {
+                resultHandler.handle(Future.failedFuture(res.cause()));
+            }
+        });
+    }
+
+    @Override
+    public void queryArticles(JsonObject json, Handler<AsyncResult<JsonObject>> resultHandler) {
+        vertx.executeBlocking(future -> {
+            FindOptions findOptions = new FindOptions()
+                    .limit(json.getInteger("limit", 20))
+                    .skip(json.getInteger("offset", 0));
+
+            Query<Article> query = datastore.createQuery(Article.class);
+            query.order(Sort.descending("createTime"));
+
+            if (json.getString("author") != null) {
+                query.field("author.$username").equal(new ObjectId(json.getString("author")));
+            }
+
+            if (json.getString("favoriter") != null) {
+                Query<User> userQuery = datastore.createQuery(User.class);
+                query.field("username").equal(new ObjectId(json.getString("favoriter")));
+                User favoriter = userQuery.first();
+
+                query.field("slug").in(favoriter.getFavorites());
+            }
+
+            if (json.getJsonArray("tags") != null) {
+                List<Criteria> criteria = json.getJsonArray("tags").stream().map(tag -> query.criteria("tagList").in(json.getJsonArray("tags"))).collect(Collectors.toList());
+                query.or(criteria.toArray(new Criteria[0]));
+            }
+
+            long count = query.count();
+            List<Article> articles = query.find(findOptions).toList();
+            JsonArray array = new JsonArray();
+            articles.forEach(article -> array.add(article.toJson()));
+
+            JsonObject res = new JsonObject();
+
+            res.put("articlesCount", count);
+            res.put("articles", array);
+
+            future.complete(res);
+        }, res -> {
+            if (res.succeeded()) {
+                resultHandler.handle(Future.succeededFuture((JsonObject)res.result()));
+            } else {
+                resultHandler.handle(Future.failedFuture(res.cause()));
+            }
+        });
+    }
+
+    @Override
+    public void queryArticlesFeed(JsonObject json, Handler<AsyncResult<JsonObject>> resultHandler) {
+        vertx.executeBlocking(future -> {
+            FindOptions findOptions = new FindOptions()
+                    .limit(json.getInteger("limit", 20))
+                    .skip(json.getInteger("offset", 0));
+
+
+            Query<Article> query = datastore.createQuery(Article.class);
+            query.order(Sort.descending("createTime"));
+
+            if (json.getString("queryingUser") != null) {
+                Query<User> userQuery = datastore.createQuery(User.class);
+                query.field("username").equal(new ObjectId(json.getString("queryingUser")));
+                User queryingUser = userQuery.first();
+
+                query.field("author").in(queryingUser.getFavorites());
+            }
+
+            long count = query.count();
+            List<Article> articles = query.find(findOptions).toList();
+            JsonArray array = new JsonArray();
+            articles.forEach(article -> array.add(article.toJson()));
+
+            JsonObject res = new JsonObject();
+
+            res.put("articlesCount", count);
+            res.put("articles", array);
+
+            future.complete(res);
+        }, res -> {
+            if (res.succeeded()) {
+                resultHandler.handle(Future.succeededFuture((JsonObject) res.result()));
             } else {
                 resultHandler.handle(Future.failedFuture(res.cause()));
             }

@@ -8,6 +8,7 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.Pattern;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -139,5 +140,9 @@ public class User extends Base {
 
     public boolean isFollowing(User user) {
         return this.following.contains(user);
+    }
+
+    public List<String> getFavorites() {
+        return Collections.unmodifiableList(this.favorites);
     }
 }
