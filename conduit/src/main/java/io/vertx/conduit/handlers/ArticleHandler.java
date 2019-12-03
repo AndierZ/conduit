@@ -16,6 +16,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
 import routerutils.BaseHandler;
+import routerutils.Middleware;
 import routerutils.RouteConfig;
 
 import java.util.Objects;
@@ -54,6 +55,7 @@ public class ArticleHandler extends BaseHandler {
         this.slugify = new Slugify();
     }
 
+    @Middleware
     public void extractArticle(RoutingContext event) {
         String slug = event.request().getParam("article");
         if (slug != null) {
@@ -71,6 +73,7 @@ public class ArticleHandler extends BaseHandler {
         }
     }
 
+    @Middleware
     public void extractUser(RoutingContext event) {
         userService.rxGetById(event.get("userId"))
                    .subscribe((user, ex) -> {
@@ -83,6 +86,7 @@ public class ArticleHandler extends BaseHandler {
                    });
     }
 
+    @Middleware
     public void extractComment(RoutingContext event) {
         String commentId = event.request().getParam("comment");
         commentService.rxGet(commentId)

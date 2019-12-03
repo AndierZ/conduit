@@ -15,6 +15,7 @@ import io.vertx.serviceproxy.ServiceProxyBuilder;
 import logging.ContextLogger;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import routerutils.BaseHandler;
+import routerutils.Middleware;
 import routerutils.RouteConfig;
 
 @RouteConfig(path="/api", produces = "application/json")
@@ -89,6 +90,7 @@ public class UserHandler extends BaseHandler {
                 .subscribe((res, ex) -> handleResponse(event, res.toAuthJson(), ex, HttpResponseStatus.OK));
     }
 
+    @Middleware
     public void extractProfile(RoutingContext event) {
         String username = event.request().getParam("username");
         userService.rxGet(new JsonObject().put("username", username))
@@ -119,6 +121,7 @@ public class UserHandler extends BaseHandler {
         }
     }
 
+    @Middleware
     public void extractUser(RoutingContext event) {
         userService.rxGetById(event.get("userId"))
                 .subscribe((user, ex) -> {

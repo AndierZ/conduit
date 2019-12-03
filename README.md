@@ -37,14 +37,13 @@
 add annotation for middle ware methods
 base handler to populate base fields (create time/update time and etc?)
 
-
 better deal with event.fail(e), instead of just showing internal server error?
 
-
+add custom jwt handler to expect "token" instead of "bearer"
 add unit tests
 
 security review
-Create docker for each separate each verticle as its own process/service
-Run each docker/service independently on a cluster
+Dockerize each verticle
+Run each docker independently in a cluster
 Add load balancer in front of the http verticles
 look into using protobuf as customized codec for service proxy
