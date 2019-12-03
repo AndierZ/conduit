@@ -74,7 +74,7 @@ public class UserHandler extends BaseHandler {
         JsonObject message = event.getBodyAsJson().getJsonObject(USER);
         message.put("password", setPassword(message.getString("password")));
         userService.rxCreate(message)
-                .subscribe((res, ex) -> handleResponse(event, res.toAuthJson(), ex, HttpResponseStatus.OK));
+                .subscribe((res, ex) -> handleResponse(event, res.toAuthJson(), ex, HttpResponseStatus.CREATED));
     }
 
     @RouteConfig(path="/user", method = HttpMethod.POST)
