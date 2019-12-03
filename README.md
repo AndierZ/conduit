@@ -33,17 +33,17 @@
 29. add follow/unfollow
 30. add tags
 31. add query routes
+32. add annotation for middle ware methods
 
-add annotation for middle ware methods
-base handler to populate base fields (create time/update time and etc?)
-
-better deal with event.fail(e), instead of just showing internal server error?
-
-add custom jwt handler to expect "token" instead of "bearer"
 add unit tests
 
+later
+    populate base fields (in the GUI or at the very end, i.e. db side?)
+    better deal with event.fail(e), instead of just showing internal server error?
+    add custom jwt handler to expect "token" instead of "bearer"
+
 security review
-Dockerize each verticle
-Run each docker independently in a cluster
+Deploy to aws as a single docker image
+Dockerize each verticle and deploy in a cluster
 Add load balancer in front of the http verticles
 look into using protobuf as customized codec for service proxy

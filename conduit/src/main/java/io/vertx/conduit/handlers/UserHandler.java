@@ -144,9 +144,7 @@ public class UserHandler extends BaseHandler {
         JsonObject update = new JsonObject().put("$push", new JsonObject().put("following", profileUser.toJson()));
         userService.rxUpdate(queryingUser.getId().toHexString(), update)
                    .map(user -> new JsonObject().put("", profileUser.toProfileJsonFor(queryingUser)))
-                    .subscribe((json, ex) -> {
-                        handleResponse(event, json, ex, HttpResponseStatus.OK);
-                    });
+                    .subscribe((json, ex) -> handleResponse(event, json, ex, HttpResponseStatus.OK));
     }
 
     @RouteConfig(path="/:username/follow", method = HttpMethod.DELETE, middlewares = {"extractProfile", "extractUser"})
@@ -159,8 +157,6 @@ public class UserHandler extends BaseHandler {
         JsonObject update = new JsonObject().put("$pop", new JsonObject().put("following", profileUser.toJson()));
         userService.rxUpdate(queryingUser.getId().toHexString(), update)
                 .map(user -> new JsonObject().put("", profileUser.toProfileJsonFor(queryingUser)))
-                .subscribe((json, ex) -> {
-                    handleResponse(event, json, ex, HttpResponseStatus.OK);
-                });
+                .subscribe((json, ex) -> handleResponse(event, json, ex, HttpResponseStatus.OK));
     }
 }

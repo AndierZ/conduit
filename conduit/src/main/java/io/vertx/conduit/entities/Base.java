@@ -16,11 +16,11 @@ public abstract class Base implements Serializable {
 
     @Version
     private long version;
-    private String createdBy;
+    private String createUser;
     private long createTime;
     private long updateTime;
-    private String updatedBy;
-    private boolean isActive;
+    private String updateUser;
+    private boolean isRetired;
 
     public ObjectId getId() {
         return id;
@@ -30,12 +30,12 @@ public abstract class Base implements Serializable {
         this.id = id;
     }
 
-    public String getCreatedBy() {
-        return createdBy;
+    public String getCreateUser() {
+        return createUser;
     }
 
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
+    public void setCreateUser(String createUser) {
+        this.createUser = createUser;
     }
 
     public long getCreateTime() {
@@ -54,20 +54,20 @@ public abstract class Base implements Serializable {
         this.updateTime = updateTime;
     }
 
-    public String getUpdatedBy() {
-        return updatedBy;
+    public String getUpdateUser() {
+        return updateUser;
     }
 
-    public void setUpdatedBy(String updatedBy) {
-        this.updatedBy = updatedBy;
+    public void setUpdateUser(String updateUser) {
+        this.updateUser = updateUser;
     }
 
     public boolean getIsActive() {
-        return isActive;
+        return isRetired;
     }
 
     public void setIsActive(boolean isActive) {
-        this.isActive = isActive;
+        this.isRetired = isActive;
     }
 
     protected void toJson(JsonObject json) {

@@ -108,15 +108,8 @@ public class ArticleHandler extends BaseHandler {
         message.put("author", user.toJson());
 
         articleService.rxCreate(message)
-                      .subscribe((article, e) -> {
-                          if (e == null) {
-                              event.response()
-                                      .setStatusCode(HttpResponseStatus.CREATED.code())
-                                      .end(Json.encodePrettily(article.toJsonFor(user)));
-                          } else {
-                              event.fail(e);
-                          }
-                      });
+                      .map(article -> article.toJsonFor(user))
+                      .subscribe((json, e) -> handleResponse(event, json, e, HttpResponseStatus.CREATED));
     }
 
     @RouteConfig(path="/:article", method=HttpMethod.GET, middlewares = {"extractArticle", "extractUser"})
@@ -141,15 +134,8 @@ public class ArticleHandler extends BaseHandler {
         JsonObject message = event.getBodyAsJson().getJsonObject(ARTICLE);
 
         articleService.rxUpdate(article.getSlug(), message)
-                   .subscribe((res, e) -> {
-                       if (e == null) {
-                           event.response()
-                                   .setStatusCode(HttpResponseStatus.OK.code())
-                                   .end(Json.encodePrettily(res.toJsonFor(user)));
-                       } else {
-                           event.fail(e);
-                       }
-                   });
+                      .map(updatedArticle -> updatedArticle.toJsonFor(user))
+                      .subscribe((json, e) -> handleResponse(event, json, e, HttpResponseStatus.OK));
     }
 
     @RouteConfig(path="/:article", method=HttpMethod.DELETE, middlewares = {"extractArticle", "extractUser"})
@@ -177,21 +163,13 @@ public class ArticleHandler extends BaseHandler {
         JsonObject update = new JsonObject().put("$push", new JsonObject().put("favorites", article.getSlug()));
 
         userService.rxUpdate(user.getId().toHexString(), update)
-                   .flatMap(ignored -> {
-                       return userService.rxGetFavoriteCount(article.getId().toHexString());
-                   })
+                   .flatMap(ignored -> userService.rxGetFavoriteCount(article.getId().toHexString()))
                    .flatMap(count -> {
                        article.setFavoritesCount(count);
                        return articleService.rxUpdate(article.getSlug(), new JsonObject().put("favoritesCount", count));
-                   }).subscribe((updatedArticle, ex) -> {
-                       if (ex == null) {
-                           event.response()
-                                   .setStatusCode(HttpResponseStatus.OK.code())
-                                   .end(Json.encodePrettily(updatedArticle.toJsonFor(user)));
-                       } else {
-                           event.fail(ex);
-                       }
-        });
+                   })
+                   .map(updatedArticle -> updatedArticle.toJsonFor(user))
+                   .subscribe((json, ex) -> handleResponse(event, json, ex, HttpResponseStatus.OK));
     }
 
     @RouteConfig(path="/:article/favorite", method=HttpMethod.DELETE, middlewares = {"extractArticle", "extractUser"})
@@ -215,15 +193,9 @@ public class ArticleHandler extends BaseHandler {
                 .flatMap(count -> {
                     article.setFavoritesCount(count);
                     return articleService.rxUpdate(article.getSlug(), new JsonObject().put("favoritesCount", count));
-                }).subscribe((updatedArticle, ex) -> {
-            if (ex == null) {
-                event.response()
-                        .setStatusCode(HttpResponseStatus.OK.code())
-                        .end(Json.encodePrettily(updatedArticle.toJsonFor(user)));
-            } else {
-                event.fail(ex);
-            }
-        });
+                })
+                .map(updatedArticle -> updatedArticle.toJsonFor(user))
+                .subscribe((json, ex) -> handleResponse(event, json, ex, HttpResponseStatus.OK));
     }
 
     @RouteConfig(path="/:article/comments", method= HttpMethod.POST, middlewares = {"extractUser", "extractArticle"})
@@ -241,15 +213,9 @@ public class ArticleHandler extends BaseHandler {
         commentService.rxCreate(message)
                       .zipWith(articleService.rxUpdate(article.getSlug(), update), (comment, updatedArticle) -> {
                           return comment;
-                      }).subscribe((comment, ex) -> {
-                            if (ex == null) {
-                                event.response()
-                                        .setStatusCode(HttpResponseStatus.OK.code())
-                                        .end(Json.encodePrettily(comment.toJsonFor(user)));
-                            } else {
-                                event.fail(ex);
-                            }
-                      });
+                      })
+                      .map(comment -> comment.toJsonFor(user))
+                      .subscribe((json, ex) -> handleResponse(event, json, ex, HttpResponseStatus.OK));
     }
 
     @RouteConfig(path="/:article/comments", method= HttpMethod.GET, middlewares = {"extractUser", "extractArticle"})
@@ -276,9 +242,7 @@ public class ArticleHandler extends BaseHandler {
         if (comment.getAuthor().getId().equals(user.getId())) {
             JsonObject update = new JsonObject().put("$pop", new JsonObject().put("comments", comment.toJson()));
             articleService.rxUpdate(article.getSlug(), update)
-            .flatMap(ignored -> {
-                return commentService.rxDelete(comment.getId().toHexString());
-            })
+            .flatMap(ignored -> commentService.rxDelete(comment.getId().toHexString()))
             .subscribe((ignored, ex) -> {
                 if (ex == null) {
                     event.response()
