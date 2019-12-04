@@ -74,20 +74,21 @@ public class UserHandler extends BaseHandler {
         JsonObject message = event.getBodyAsJson().getJsonObject(USER);
         message.put("password", setPassword(message.getString("password")));
         userService.rxCreate(message)
-                .subscribe((res, ex) -> handleResponse(event, res.toAuthJson(), ex, HttpResponseStatus.CREATED));
+                .doOnError(e -> handleError(event, e))
+                .subscribe(res -> handleResponse(event, res.toAuthJson(), HttpResponseStatus.CREATED), e -> handleError(event, e));
     }
 
     @RouteConfig(path="/user", method = HttpMethod.POST)
     public void put(RoutingContext event) {
         JsonObject message = event.getBodyAsJson().getJsonObject(USER);
         userService.rxUpdate(event.get("userId"), message)
-                .subscribe((res, ex) -> handleResponse(event, res.toAuthJson(), ex, HttpResponseStatus.OK));
+                .subscribe(res -> handleResponse(event, res.toAuthJson(), HttpResponseStatus.OK), e -> handleError(event, e));
     }
 
     @RouteConfig(path="/user")
     public void get(RoutingContext event) {
         userService.rxGetById(event.get("userId"))
-                .subscribe((res, ex) -> handleResponse(event, res.toAuthJson(), ex, HttpResponseStatus.OK));
+                .subscribe(res -> handleResponse(event, res.toAuthJson(), HttpResponseStatus.OK), e -> handleError(event, e));
     }
 
     @Middleware
@@ -113,11 +114,11 @@ public class UserHandler extends BaseHandler {
 
             userService.rxGetById(queryingUserId)
                        .map(queryingUser -> profile.toProfileJsonFor(queryingUser))
-                       .subscribe((json, ex) -> handleResponse(event, json, ex, HttpResponseStatus.OK));
+                       .subscribe(res -> handleResponse(event, res, HttpResponseStatus.OK), e -> handleError(event, e));
 
         } else {
             JsonObject json = profile.toProfileJsonFor(null);
-            handleResponse(event, json, null, HttpResponseStatus.OK);
+            handleResponse(event, json, HttpResponseStatus.OK);
         }
     }
 
@@ -144,7 +145,7 @@ public class UserHandler extends BaseHandler {
         JsonObject update = new JsonObject().put("$push", new JsonObject().put("following", profileUser.toJson()));
         userService.rxUpdate(queryingUser.getId().toHexString(), update)
                    .map(user -> new JsonObject().put("", profileUser.toProfileJsonFor(queryingUser)))
-                    .subscribe((json, ex) -> handleResponse(event, json, ex, HttpResponseStatus.OK));
+                   .subscribe(res -> handleResponse(event, res, HttpResponseStatus.OK), e -> handleError(event, e));
     }
 
     @RouteConfig(path="/:username/follow", method = HttpMethod.DELETE, middlewares = {"extractProfile", "extractUser"})
@@ -157,6 +158,6 @@ public class UserHandler extends BaseHandler {
         JsonObject update = new JsonObject().put("$pop", new JsonObject().put("following", profileUser.toJson()));
         userService.rxUpdate(queryingUser.getId().toHexString(), update)
                 .map(user -> new JsonObject().put("", profileUser.toProfileJsonFor(queryingUser)))
-                .subscribe((json, ex) -> handleResponse(event, json, ex, HttpResponseStatus.OK));
+                .subscribe(res -> handleResponse(event, res, HttpResponseStatus.OK), e -> handleError(event, e));
     }
 }

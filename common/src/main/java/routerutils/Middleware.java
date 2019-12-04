@@ -6,7 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 @SuppressWarnings("unused")
-@Target({ ElementType.METHOD, ElementType.TYPE })
+@Target({ ElementType.METHOD })
 @Retention(RetentionPolicy.SOURCE)
 public @interface Middleware {
 }

@@ -5,6 +5,7 @@ import io.vertx.conduit.services.ArticleServiceImpl;
 import io.vertx.conduit.services.UserService;
 import io.vertx.conduit.services.UserServiceImpl;
 import io.vertx.core.AbstractVerticle;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -23,7 +24,7 @@ public class ArticleServiceVerticle extends AbstractVerticle {
     private MessageConsumer<JsonObject> consumer;
 
     @Override
-    public void start() {
+    public void start(Promise<Void> startPromise) {
 
         ServiceDiscovery.create(vertx, discovery -> {
             binder = new ServiceBinder(vertx);
@@ -40,9 +41,10 @@ public class ArticleServiceVerticle extends AbstractVerticle {
                 if (ar.succeeded()) {
                     this.record = record;
                     LOGGER.info("Article service published");
-
+                    startPromise.complete();
                 } else {
                     LOGGER.error("Error publishing article service", ar.cause());
+                    startPromise.fail(ar.cause());
                 }
             });
 

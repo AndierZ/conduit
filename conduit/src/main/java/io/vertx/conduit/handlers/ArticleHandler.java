@@ -109,7 +109,7 @@ public class ArticleHandler extends BaseHandler {
 
         articleService.rxCreate(message)
                       .map(article -> article.toJsonFor(user))
-                      .subscribe((json, e) -> handleResponse(event, json, e, HttpResponseStatus.CREATED));
+                      .subscribe(res -> handleResponse(event, res, HttpResponseStatus.CREATED), e -> handleError(event, e));
     }
 
     @RouteConfig(path="/:article", method=HttpMethod.GET, middlewares = {"extractArticle", "extractUser"})
@@ -135,7 +135,7 @@ public class ArticleHandler extends BaseHandler {
 
         articleService.rxUpdate(article.getSlug(), message)
                       .map(updatedArticle -> updatedArticle.toJsonFor(user))
-                      .subscribe((json, e) -> handleResponse(event, json, e, HttpResponseStatus.OK));
+                      .subscribe(res -> handleResponse(event, res, HttpResponseStatus.OK), e -> handleError(event, e));
     }
 
     @RouteConfig(path="/:article", method=HttpMethod.DELETE, middlewares = {"extractArticle", "extractUser"})
@@ -169,7 +169,7 @@ public class ArticleHandler extends BaseHandler {
                        return articleService.rxUpdate(article.getSlug(), new JsonObject().put("favoritesCount", count));
                    })
                    .map(updatedArticle -> updatedArticle.toJsonFor(user))
-                   .subscribe((json, ex) -> handleResponse(event, json, ex, HttpResponseStatus.OK));
+                   .subscribe(res -> handleResponse(event, res, HttpResponseStatus.OK), e -> handleError(event, e));
     }
 
     @RouteConfig(path="/:article/favorite", method=HttpMethod.DELETE, middlewares = {"extractArticle", "extractUser"})
@@ -195,7 +195,7 @@ public class ArticleHandler extends BaseHandler {
                     return articleService.rxUpdate(article.getSlug(), new JsonObject().put("favoritesCount", count));
                 })
                 .map(updatedArticle -> updatedArticle.toJsonFor(user))
-                .subscribe((json, ex) -> handleResponse(event, json, ex, HttpResponseStatus.OK));
+                .subscribe(res -> handleResponse(event, res, HttpResponseStatus.OK), e -> handleError(event, e));
     }
 
     @RouteConfig(path="/:article/comments", method= HttpMethod.POST, middlewares = {"extractUser", "extractArticle"})
@@ -215,7 +215,7 @@ public class ArticleHandler extends BaseHandler {
                           return comment;
                       })
                       .map(comment -> comment.toJsonFor(user))
-                      .subscribe((json, ex) -> handleResponse(event, json, ex, HttpResponseStatus.OK));
+                      .subscribe(res -> handleResponse(event, res, HttpResponseStatus.OK), e -> handleError(event, e));
     }
 
     @RouteConfig(path="/:article/comments", method= HttpMethod.GET, middlewares = {"extractUser", "extractArticle"})

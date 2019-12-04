@@ -3,6 +3,7 @@ package io.vertx.conduit.verticles;
 import io.vertx.conduit.services.MongoDbService;
 import io.vertx.conduit.services.MongoDbServiceImpl;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -23,7 +24,7 @@ public class MongoDbServiceVerticle extends AbstractVerticle {
     private MessageConsumer<JsonObject> consumer;
 
     @Override
-    public void start(Future<Void> startFuture) {
+    public void start(Promise<Void> startPromise) {
 
         final MongoClient mongoClient = MongoClient.createShared(vertx, config().getJsonObject("mongodb"));
         ServiceDiscovery.create(vertx.getDelegate(), discovery -> {
@@ -39,13 +40,14 @@ public class MongoDbServiceVerticle extends AbstractVerticle {
                         if (ar.succeeded()) {
                             this.record = record;
                             LOGGER.info("MongoDb service published");
-
+                            startPromise.complete();
                         } else {
                             LOGGER.error("Error publishing MongoDb service", ar.cause());
+                            startPromise.fail(ready.cause());
                         }
                     });
                 } else {
-                    startFuture.fail(ready.cause());
+                    startPromise.fail(ready.cause());
                 }
             });
         });

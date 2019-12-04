@@ -1,22 +1,19 @@
 package routes;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.conduit.entities.Base;
-import io.vertx.conduit.entities.User;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-import io.vertx.reactivex.ext.web.client.WebClient;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(VertxUnitRunner.class)
 public class UserTest extends BaseUnitTest {
 
+    @Test
     public void testRegisterUser(TestContext tc) {
         Async async = tc.async();
-
-        WebClient webClient = WebClient.create(vertx);
 
         webClient.post(PORT, "localhost", "/api/users")
                 .putHeader(CONTENT_TYPE, JSON)
@@ -33,7 +30,7 @@ public class UserTest extends BaseUnitTest {
                         tc.assertEquals(user1.getBio(), returnedUser.getString("bio"));
                         tc.assertNull(returnedUser.getString("image"));
                         async.complete();
-                    }else{
+                    } else {
                         tc.fail(ar.cause());
                     }
 

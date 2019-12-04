@@ -3,6 +3,7 @@ package io.vertx.conduit.verticles;
 import io.vertx.conduit.handlers.ArticleHandler;
 import io.vertx.conduit.handlers.JwtOptionalHandler;
 import io.vertx.conduit.handlers.QueryHandler;
+import io.vertx.core.Promise;
 import logging.ContextLogger;
 import io.vertx.conduit.handlers.UserHandler;
 import io.vertx.core.AbstractVerticle;
@@ -23,7 +24,7 @@ public class HttpVerticle extends AbstractVerticle {
     private JWTAuth jwtAuth;
 
     @Override
-    public void start(Future<Void> startFuture) {
+    public void start(Promise<Void> startPromise) {
         LOGGER.info("Starting Http Verticle with config {}", "test");
 
         JsonObject config = config();
@@ -51,9 +52,9 @@ public class HttpVerticle extends AbstractVerticle {
                 .requestHandler(baseRouter)
                 .listen(3000, ar -> {
                     if (ar.succeeded()) {
-                        startFuture.complete();
+                        startPromise.complete();
                     } else {
-                        startFuture.fail(ar.cause());
+                        startPromise.fail(ar.cause());
                     }
                 });
     }

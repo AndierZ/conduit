@@ -5,20 +5,17 @@ import io.vertx.conduit.entities.Article;
 import io.vertx.conduit.entities.User;
 import io.vertx.conduit.verticles.ArticleServiceVerticle;
 import io.vertx.conduit.verticles.HttpVerticle;
-import io.vertx.conduit.verticles.MongoDbServiceVerticle;
+import io.vertx.conduit.verticles.MorphiaServiceVerticle;
 import io.vertx.conduit.verticles.UserServiceVerticle;
 import io.vertx.core.DeploymentOptions;
+import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-import io.vertx.reactivex.core.Vertx;
-import io.vertx.reactivex.ext.web.client.WebClient;
+import io.vertx.ext.web.client.WebClient;
 import org.junit.After;
 import org.junit.Before;
-import org.junit.Test;
 import org.junit.runner.RunWith;
-
-import java.util.ArrayList;
 
 @RunWith(VertxUnitRunner.class)
 public class BaseUnitTest {
@@ -51,7 +48,8 @@ public class BaseUnitTest {
                 .setConfig(new JsonObject()
                         .put("secret", "testsecret")
                         .put("mongodb", new JsonObject().put("db_name", "conduit_test")
-                                .put("connection_string", "mongodb://localhost:27017"))
+                                                        .put("host", "localhost")
+                                                        .put("port", 27017))
                 );
 
         JsonObject user1Json = new JsonObject().put("username", "user1").put("password", "123").put("email", "user1@t.com").put("bio", "I am not a robot");
@@ -68,14 +66,8 @@ public class BaseUnitTest {
 
         vertx.deployVerticle(ArticleServiceVerticle.class.getName(), tc.asyncAssertSuccess());
         vertx.deployVerticle(HttpVerticle.class.getName(), options, tc.asyncAssertSuccess());
-        vertx.deployVerticle(MongoDbServiceVerticle.class.getName(), options, tc.asyncAssertSuccess());
+        vertx.deployVerticle(MorphiaServiceVerticle.class.getName(), options, tc.asyncAssertSuccess());
         vertx.deployVerticle(UserServiceVerticle.class.getName(), options, tc.asyncAssertSuccess());
-    }
-
-    @Test
-    public void testSetup(TestContext testContext){
-        System.out.println("base setup complete");
-        testContext.assertTrue(true);
     }
 
     @After

@@ -71,7 +71,7 @@ public abstract class Base implements Serializable {
     }
 
     protected void toJson(JsonObject json) {
-        json.put("_id", id);
+        json.put("_id", id == null ? null : id.toHexString());
     }
 
     protected void fromJson(JsonObject json) {

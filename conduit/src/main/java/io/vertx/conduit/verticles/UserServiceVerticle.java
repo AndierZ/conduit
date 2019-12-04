@@ -1,5 +1,6 @@
 package io.vertx.conduit.verticles;
 
+import io.vertx.core.Promise;
 import logging.ContextLogger;
 import io.vertx.conduit.services.UserService;
 import io.vertx.conduit.services.UserServiceImpl;
@@ -21,7 +22,7 @@ public class UserServiceVerticle extends AbstractVerticle {
     private MessageConsumer<JsonObject> consumer;
 
     @Override
-    public void start() {
+    public void start(Promise<Void> startPromise) {
 
         ServiceDiscovery.create(vertx, discovery -> {
             binder = new ServiceBinder(vertx);
@@ -38,9 +39,10 @@ public class UserServiceVerticle extends AbstractVerticle {
                 if (ar.succeeded()) {
                     this.record = record;
                     LOGGER.info("User service published");
-
+                    startPromise.complete();
                 } else {
                     LOGGER.error("Error publishing user service", ar.cause());
+                    startPromise.fail(ar.cause());
                 }
             });
 

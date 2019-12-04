@@ -17,7 +17,7 @@ public class App extends AbstractVerticle {
     private static Logger LOGGER = ContextLogger.create();
 
     @Override
-    public void start(Future<Void> startFuture) {
+    public void start(Promise<Void> startPromise) {
 
         getConfig().setHandler(ar1 -> {
             if (ar1.succeeded()) {
@@ -31,20 +31,20 @@ public class App extends AbstractVerticle {
                 .setHandler(ar2 -> {
                     if (ar2.succeeded()) {
                         LOGGER.info("Successfully deployed verticals.");
-                        startFuture.complete();
+                        startPromise.complete();
                     } else {
                         LOGGER.error("Failed to deploy verticles: " + ar2.cause().getMessage());
-                        startFuture.fail(ar2.cause());
+                        startPromise.fail(ar2.cause());
                     }
                 });
             } else {
-                startFuture.fail(ar1.cause());
+                startPromise.fail(ar1.cause());
             }
         });
     }
 
     private Future<Void> deployVerticle(Class<? extends Verticle> clz, DeploymentOptions deploymentOptions){
-        Future<Void> deploymentFuture = Future.future();
+        Promise<Void> deploymentFuture = Promise.promise();
         vertx.deployVerticle(clz, deploymentOptions, ar ->{
             if (ar.succeeded()) {
                 deploymentFuture.complete();
@@ -52,7 +52,7 @@ public class App extends AbstractVerticle {
                 deploymentFuture.fail(ar.cause());
             }
         });
-        return deploymentFuture;
+        return deploymentFuture.future();
     }
 
     private Future<JsonObject> getConfig() {

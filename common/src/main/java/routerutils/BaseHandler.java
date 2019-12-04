@@ -6,6 +6,8 @@ import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 
+import javax.xml.ws.http.HTTPBinding;
+
 public abstract class BaseHandler {
 
     protected final Vertx vertx;
@@ -14,13 +16,15 @@ public abstract class BaseHandler {
         this.vertx = vertx;
     }
 
-    protected static void handleResponse(RoutingContext event, JsonObject res, Throwable ex, HttpResponseStatus successStatus) {
+    protected static void handleError(RoutingContext event, Throwable ex) {
         if (ex != null) {
-            event.fail(ex);
-        } else {
-            event.response()
-                    .setStatusCode(successStatus.code())
-                    .end(Json.encodePrettily(res));
+            event.fail(HttpResponseStatus.INTERNAL_SERVER_ERROR.code(), ex);
         }
+    }
+
+    protected static void handleResponse(RoutingContext event, JsonObject res, HttpResponseStatus successStatus) {
+        event.response()
+                .setStatusCode(successStatus.code())
+                .end(Json.encodePrettily(res));
     }
 }

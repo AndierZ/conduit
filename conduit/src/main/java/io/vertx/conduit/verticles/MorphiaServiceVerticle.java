@@ -4,6 +4,7 @@ import io.vertx.conduit.services.MorphiaService;
 import io.vertx.conduit.services.MorphiaServiceImpl;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
+import io.vertx.core.Promise;
 import io.vertx.core.eventbus.MessageConsumer;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
@@ -22,7 +23,7 @@ public class MorphiaServiceVerticle extends AbstractVerticle {
     private MessageConsumer<JsonObject> consumer;
 
     @Override
-    public void start(Future<Void> startFuture) {
+    public void start(Promise<Void> startPromise) {
 
         ServiceDiscovery.create(vertx, discovery -> {
             binder = new ServiceBinder(vertx);
@@ -37,13 +38,14 @@ public class MorphiaServiceVerticle extends AbstractVerticle {
                         if (ar.succeeded()) {
                             this.record = record;
                             LOGGER.info("Morphia service published");
-
+                            startPromise.complete();
                         } else {
                             LOGGER.error("Error publishing Morphia service", ar.cause());
+                            startPromise.fail(ar.cause());
                         }
                     });
                 } else {
-                    startFuture.fail(ready.cause());
+                    startPromise.fail(ready.cause());
                 }
             });
         });
