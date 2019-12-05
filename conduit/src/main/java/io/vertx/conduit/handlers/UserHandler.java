@@ -74,7 +74,6 @@ public class UserHandler extends BaseHandler {
         JsonObject message = event.getBodyAsJson().getJsonObject(USER);
         message.put("password", setPassword(message.getString("password")));
         userService.rxCreate(message)
-                .doOnError(e -> handleError(event, e))
                 .subscribe(res -> handleResponse(event, res.toAuthJson(), HttpResponseStatus.CREATED), e -> handleError(event, e));
     }
 

@@ -11,12 +11,13 @@ import org.junit.runner.RunWith;
 @RunWith(VertxUnitRunner.class)
 public class UserTest extends BaseUnitTest {
 
-    @Test
+    @Test(timeout = 120000)
     public void testRegisterUser(TestContext tc) {
         Async async = tc.async();
 
         webClient.post(PORT, "localhost", "/api/users")
                 .putHeader(CONTENT_TYPE, JSON)
+                .putHeader(XREQUESTEDWITH, XMLHTTPREQUEST)
                 .sendJsonObject(new JsonObject()
                         .put("user", user1.toJson()
                         ), ar -> {

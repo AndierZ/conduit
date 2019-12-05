@@ -23,6 +23,8 @@ public class BaseUnitTest {
     protected static final String CONTENT_TYPE = "Content-Type";
     protected static final String JSON = "application/json";
     protected static final String AUTHORIZATION = "Authorization";
+    public static final String XMLHTTPREQUEST = "XMLHttpRequest";
+    public static final String XREQUESTEDWITH = "X-Requested-With";
     protected static int PORT = 3000;
 
     protected Vertx vertx;
