@@ -18,10 +18,7 @@ public abstract class BaseHandler {
 
     protected static void handleError(RoutingContext event, Throwable ex) {
         if (ex != null) {
-            event.response()
-                 .setStatusCode(HttpResponseStatus.INTERNAL_SERVER_ERROR.code())
-                 .end(Json.encodePrettily(ex.getMessage()));
-//            event.fail(HttpResponseStatus.INTERNAL_SERVER_ERROR.code(), ex);
+            event.fail(HttpResponseStatus.INTERNAL_SERVER_ERROR.code(), ex);
         }
     }
 

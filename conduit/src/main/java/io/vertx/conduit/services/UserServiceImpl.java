@@ -93,4 +93,16 @@ public class UserServiceImpl implements UserService {
                           }
                       });
     }
+
+    @Override
+    public void deleteByUsername(String username, Handler<AsyncResult<Integer>> resultHandler) {
+        morphiaService.rxDeleteUser(new JsonObject().put("username", username))
+                      .subscribe((deleteCount, ex) -> {
+                          if (ex == null) {
+                              resultHandler.handle(Future.succeededFuture(deleteCount));
+                          } else {
+                              resultHandler.handle(Future.failedFuture(ex));
+                          }
+                      });
+    }
 }

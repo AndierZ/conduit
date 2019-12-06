@@ -1,9 +1,3 @@
-buildscript {
-    ext {
-        vertxVersion = "3.8.3"
-    }
-}
-
 plugins {
     id 'io.vertx.vertx-plugin' version '1.0.1'
 
@@ -16,6 +10,7 @@ repositories {
 
 vertx {
     mainVerticle = 'io.vertx.conduit.App'
+    vertxVersion = "3.8.4"
     jvmArgs = ["-Dvertx.logger-delegate-factory-class-name=io.vertx.core.logging.Log4j2LogDelegateFactory"]
     debugSuspend = true
     debugPort = 5005
@@ -29,7 +24,7 @@ dependencies{
     compile group: 'io.vertx', name: 'vertx-service-proxy'
     compile group: 'io.vertx', name: 'vertx-service-discovery'
     compile group: 'io.vertx', name: 'vertx-rx-java2'
-    compile group: 'io.vertx', name: 'vertx-rx-java2-gen', version: vertxVersion
+    compile group: 'io.vertx', name: 'vertx-rx-java2-gen', version: '3.8.4'
     compile group: 'io.vertx', name: 'vertx-web-client'
     compile group: 'com.github.slugify', name: 'slugify', version: '2.2'
     compile group: 'org.springframework.security', name: 'spring-security-crypto', version: '3.1.0.RELEASE'
