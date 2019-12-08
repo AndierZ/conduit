@@ -40,11 +40,11 @@ public interface MorphiaService {
 
     void updateComment(final JsonObject query, final JsonObject update, final Handler<AsyncResult<List<Comment>>> resultHandler);
 
-    void deleteUser(final JsonObject query, Handler<AsyncResult<Integer>> resultHandler);
+    void deleteUser(final JsonObject query, Handler<AsyncResult<Long>> resultHandler);
 
-    void deleteArticle(final JsonObject query, Handler<AsyncResult<Integer>> resultHandler);
+    void deleteArticle(final JsonObject query, Handler<AsyncResult<Long>> resultHandler);
 
-    void deleteComment(final JsonObject query, Handler<AsyncResult<Integer>> resultHandler);
+    void deleteComment(final JsonObject query, Handler<AsyncResult<Long>> resultHandler);
 
     void queryTags(Handler<AsyncResult<List<String>>> resultHandler);
 

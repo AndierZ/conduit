@@ -16,7 +16,6 @@ import io.vertx.core.Handler;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
-import javafx.util.Pair;
 import org.bson.Document;
 import org.bson.types.ObjectId;
 
@@ -106,17 +105,17 @@ public class MorphiaServiceImpl implements MorphiaService {
     }
 
     @Override
-    public void deleteUser(JsonObject query, Handler<AsyncResult<Integer>> resultHandler) {
+    public void deleteUser(JsonObject query, Handler<AsyncResult<Long>> resultHandler) {
         delete(User.class, query, resultHandler);
     }
 
     @Override
-    public void deleteArticle(JsonObject query, Handler<AsyncResult<Integer>> resultHandler) {
+    public void deleteArticle(JsonObject query, Handler<AsyncResult<Long>> resultHandler) {
         delete(Article.class, query, resultHandler);
     }
 
     @Override
-    public void deleteComment(JsonObject query, Handler<AsyncResult<Integer>> resultHandler) {
+    public void deleteComment(JsonObject query, Handler<AsyncResult<Long>> resultHandler) {
         delete(Comment.class, query, resultHandler);
     }
 
@@ -291,7 +290,7 @@ public class MorphiaServiceImpl implements MorphiaService {
         });
     }
 
-    public <T extends Base> void delete(final Class<T> clazz, final JsonObject query, final Handler<AsyncResult<Integer>> resultHandler) {
+    public <T extends Base> void delete(final Class<T> clazz, final JsonObject query, final Handler<AsyncResult<Long>> resultHandler) {
         vertx.executeBlocking(future -> {
             final Query<T> deleteQuery = datastore.createQuery(clazz);
             for(Iterator<Map.Entry<String, Object>> it = query.iterator(); it.hasNext();) {
@@ -302,12 +301,12 @@ public class MorphiaServiceImpl implements MorphiaService {
                     deleteQuery.filter(pair.getKey(), pair.getValue());
                 }
             }
-            int numDeleted = deleteQuery.find().toList().size();
+            long numDeleted = deleteQuery.count();
             datastore.delete(deleteQuery);
             future.complete(numDeleted);
         }, res -> {
             if (res.succeeded()) {
-                resultHandler.handle(Future.succeededFuture( (Integer) res.result()));
+                resultHandler.handle(Future.succeededFuture( (Long) res.result()));
             } else {
                 resultHandler.handle(Future.failedFuture(res.cause()));
             }

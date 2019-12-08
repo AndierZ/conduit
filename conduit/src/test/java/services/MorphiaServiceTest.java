@@ -59,7 +59,7 @@ public class MorphiaServiceTest {
               return this.morphiaService.rxDeleteUser(new JsonObject().put("_id", user.getId().toHexString()));
            }).subscribe((numDeleted, e) -> {
               if (e == null) {
-                  assertEquals(1, (int) numDeleted);
+                  assertEquals(1, (long) numDeleted);
                   async.complete();
               } else {
                   tc.fail(e);
@@ -178,7 +178,7 @@ public class MorphiaServiceTest {
         this.morphiaService.rxDeleteUser(new JsonObject().put("_id", user.getId().toHexString()))
                 .subscribe((numDeleted, e) -> {
                     if (e == null) {
-                        assertEquals(1, (int) numDeleted);
+                        assertEquals(1, (long) numDeleted);
                         async4.complete();
                     } else {
                         tc.fail(e);
@@ -223,11 +223,11 @@ public class MorphiaServiceTest {
             assertEquals(article.getBody(), articles.get(0).getBody());
             return this.morphiaService.rxDeleteArticle(new JsonObject().put("_id", article.getId().toHexString()));
         }).flatMap(numDeleted -> {
-            assertEquals(1, (int) numDeleted);
+            assertEquals(1, (long) numDeleted);
             return this.morphiaService.rxDeleteUser(new JsonObject().put("_id", user.getId().toHexString()));
         }).subscribe((numDeleted, e) -> {
             if (e == null) {
-                assertEquals(1, (int) numDeleted);
+                assertEquals(1, (long) numDeleted);
                 async.complete();
             } else {
                 tc.fail(e);

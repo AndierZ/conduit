@@ -50,7 +50,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
-    public void delete(String slug, Handler<AsyncResult<Integer>> resultHandler) {
+    public void delete(String slug, Handler<AsyncResult<Long>> resultHandler) {
         morphiaService.rxDeleteArticle(new JsonObject().put("slug", slug))
                 .subscribe((res, ex) -> {
                     if (ex == null) {
@@ -62,7 +62,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     private static void handleArticle(Handler<AsyncResult<Article>> resultHandler, List<Article> articles, Throwable ex) {
-        if (articles.size() != 1) {
+        if (articles == null || articles.size() != 1) {
             resultHandler.handle(Future.failedFuture(new RuntimeException("Couldn't find unique article")));
         } else {
             if (ex == null) {

@@ -6,6 +6,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -14,7 +15,7 @@ public class UserTest extends TestBase {
 
     @Test(timeout = TIMEOUT)
     public void testRegisterUser(TestContext tc) {
-        cleanup(tc);
+        cleanupUser(tc);
 
         registerUser(tc, user1);
 
@@ -39,7 +40,7 @@ public class UserTest extends TestBase {
 
     @Test(timeout = TIMEOUT)
     public void testUpdateUser(TestContext tc) {
-        cleanup(tc);
+        cleanupUser(tc);
         registerUser(tc, user1);
         loginUser(tc, user1);
 
@@ -67,7 +68,7 @@ public class UserTest extends TestBase {
 
     @Test(timeout = TIMEOUT)
     public void testGetUser(TestContext tc) {
-        cleanup(tc);
+        cleanupUser(tc);
         registerUser(tc, user1);
         loginUser(tc, user1);
 
@@ -91,7 +92,7 @@ public class UserTest extends TestBase {
 
     @Test(timeout = TIMEOUT)
     public void testGetProfile(TestContext tc) {
-        cleanup(tc);
+        cleanupUser(tc);
         registerUser(tc, user1);
 
         Async getProfileNoLogin = tc.async();
@@ -134,7 +135,7 @@ public class UserTest extends TestBase {
 
     @Test(timeout = TIMEOUT)
     public void testFollow(TestContext tc) {
-        cleanup(tc);
+        cleanupUser(tc);
         registerUser(tc, user1);
         registerUser(tc, user2);
         loginUser(tc, user1);
@@ -182,5 +183,11 @@ public class UserTest extends TestBase {
                         });
 
         unfollow.awaitSuccess();
+    }
+
+    @After
+    public void tearDown(TestContext tc) {
+        cleanupUser(tc);
+        super.tearDown(tc);
     }
 }

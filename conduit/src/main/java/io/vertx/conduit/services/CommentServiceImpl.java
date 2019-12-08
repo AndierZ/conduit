@@ -48,7 +48,7 @@ public class CommentServiceImpl implements CommentService {
     }
 
     @Override
-    public void delete(String id, Handler<AsyncResult<Integer>> resultHandler) {
+    public void delete(String id, Handler<AsyncResult<Long>> resultHandler) {
         morphiaService.rxDeleteComment(new JsonObject().put("_id", id))
                 .subscribe((res, ex) -> {
                     if (ex == null) {

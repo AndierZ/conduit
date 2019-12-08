@@ -20,5 +20,5 @@ public interface CommentService {
 
     void get(String id, Handler<AsyncResult<Comment>> resultHandler);
 
-    void delete(String id, Handler<AsyncResult<Integer>> resultHandler);
+    void delete(String id, Handler<AsyncResult<Long>> resultHandler);
 }

@@ -24,5 +24,5 @@ public interface UserService {
 
     void getFavoriteCount(String id, Handler<AsyncResult<Integer>> resultHandler);
 
-    void deleteByUsername(String username, Handler<AsyncResult<Integer>> resultHandler);
+    void deleteByUsername(String username, Handler<AsyncResult<Long>> resultHandler);
 }

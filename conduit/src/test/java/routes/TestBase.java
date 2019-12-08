@@ -76,11 +76,14 @@ public class TestBase {
         user1 = new User(user1Json);
         user2 = new User(user2Json);
 
-        JsonObject article1Json = new JsonObject().put("title", "first article").put("description", "We have to test it out.").put("body", "Not much to say");
-        JsonObject article2Json = new JsonObject().put("title", "second article").put("description", "Last article is really funny").put("body", "It's not over");
+        JsonObject article1Json = new JsonObject().put("title", "first article").put("slug", "first-article").put("description", "We have to test it out.").put("body", "Not much to say");
+        JsonObject article2Json = new JsonObject().put("title", "second article").put("slug", "second-article").put("description", "Last article is really funny").put("body", "It's not over");
 
         testArticle1 = new Article(article1Json);
         testArticle2 = new Article(article2Json);
+
+        testArticle1.setAuthor(user1);
+        testArticle2.setAuthor(user1);
 
         vertx.deployVerticle(ArticleServiceVerticle.class.getName(), tc.asyncAssertSuccess());
         vertx.deployVerticle(HttpVerticle.class.getName(), options, tc.asyncAssertSuccess());
@@ -106,10 +109,21 @@ public class TestBase {
         }
     }
 
-    protected void cleanup(TestContext tc) {
+    protected void cleanupUser(TestContext tc) {
         Async cleanup = tc.async();
         userService.rxDeleteByUsername(user1.getUsername())
                 .flatMap(ignored -> userService.rxDeleteByUsername(user2.getUsername()))
+                .subscribe((deleteCount, ex) -> {
+                    cleanup.complete();
+                });
+
+        cleanup.awaitSuccess();
+    }
+
+    protected void cleanupArticles(TestContext tc) {
+        Async cleanup = tc.async();
+        articleService.rxDelete(testArticle1.getSlug())
+                .flatMap(ignored -> articleService.rxDelete(testArticle2.getSlug()))
                 .subscribe((deleteCount, ex) -> {
                     cleanup.complete();
                 });
@@ -173,7 +187,6 @@ public class TestBase {
 
     @After
     public void tearDown(TestContext tc) {
-        cleanup(tc);
         vertx.setTimer(1000, t -> { System.out.println("timer complete"); });
         vertx.close(tc.asyncAssertSuccess());
     }
