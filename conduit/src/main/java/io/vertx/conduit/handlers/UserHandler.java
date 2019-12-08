@@ -107,7 +107,7 @@ public class UserHandler extends BaseHandler {
                 });
     }
 
-    @RouteConfig(path="/:username", authRequired = false, middlewares = "extractProfile")
+    @RouteConfig(path="/profiles/:username", authRequired = false, middlewares = "extractProfile")
     public void getProfile(RoutingContext event) {
 
         User profile = event.get("profile");
@@ -115,11 +115,11 @@ public class UserHandler extends BaseHandler {
         if (queryingUserId != null) {
 
             userService.rxGetById(queryingUserId)
-                       .map(queryingUser -> profile.toProfileJsonFor(queryingUser))
+                       .map(queryingUser -> new JsonObject().put("profile", profile.toProfileJsonFor(queryingUser)))
                        .subscribe(res -> handleResponse(event, res, HttpResponseStatus.OK), e -> handleError(event, e));
 
         } else {
-            JsonObject json = profile.toProfileJsonFor(null);
+            JsonObject json = new JsonObject().put("profile" ,profile.toProfileJsonFor(null));
             handleResponse(event, json, HttpResponseStatus.OK);
         }
     }
@@ -137,7 +137,7 @@ public class UserHandler extends BaseHandler {
                 });
     }
 
-    @RouteConfig(path="/:username/follow", method = HttpMethod.POST, middlewares = {"extractProfile", "extractUser"})
+    @RouteConfig(path="/profiles/:username/follow", method = HttpMethod.POST, middlewares = {"extractProfile", "extractUser"})
     public void follow(RoutingContext event) {
 
         User profileUser = event.get("profile");
@@ -146,11 +146,11 @@ public class UserHandler extends BaseHandler {
         queryingUser.follow(profileUser);
         JsonObject update = new JsonObject().put("$push", new JsonObject().put("following", profileUser.toJson()));
         userService.rxUpdate(queryingUser.getId().toHexString(), update)
-                   .map(user -> new JsonObject().put("", profileUser.toProfileJsonFor(queryingUser)))
+                   .map(user -> new JsonObject().put("profile", profileUser.toProfileJsonFor(queryingUser)))
                    .subscribe(res -> handleResponse(event, res, HttpResponseStatus.OK), e -> handleError(event, e));
     }
 
-    @RouteConfig(path="/:username/follow", method = HttpMethod.DELETE, middlewares = {"extractProfile", "extractUser"})
+    @RouteConfig(path="/profiles/:username/follow", method = HttpMethod.DELETE, middlewares = {"extractProfile", "extractUser"})
     public void unfollow(RoutingContext event) {
 
         User profileUser = event.get("profile");
@@ -159,7 +159,7 @@ public class UserHandler extends BaseHandler {
         queryingUser.unfollow(profileUser);
         JsonObject update = new JsonObject().put("$pop", new JsonObject().put("following", profileUser.toJson()));
         userService.rxUpdate(queryingUser.getId().toHexString(), update)
-                .map(user -> new JsonObject().put("", profileUser.toProfileJsonFor(queryingUser)))
+                .map(user -> new JsonObject().put("profile", profileUser.toProfileJsonFor(queryingUser)))
                 .subscribe(res -> handleResponse(event, res, HttpResponseStatus.OK), e -> handleError(event, e));
     }
 }

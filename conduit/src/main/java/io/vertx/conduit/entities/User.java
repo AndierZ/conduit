@@ -111,7 +111,7 @@ public class User extends Base {
         retJson.put("bio", bio);
         retJson.put("image", image);
         retJson.put("username", username);
-        retJson.put("following", user.isFollowing(this));
+        retJson.put("following", user != null && user.isFollowing(this));
 
         return retJson;
     }

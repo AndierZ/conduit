@@ -6,6 +6,7 @@ import dev.morphia.annotations.Version;
 import io.vertx.core.json.JsonObject;
 import org.bson.types.ObjectId;
 
+import javax.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -94,7 +95,7 @@ public abstract class Base implements Serializable {
         if (this == o) return true;
         if (!(o instanceof Base)) return false;
         Base base = (Base) o;
-        return id.equals(base.id);
+        return Objects.equals(id, base.id);
     }
 
     @Override

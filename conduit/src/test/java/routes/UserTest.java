@@ -1,7 +1,6 @@
 package routes;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.codegen.annotations.Nullable;
 import io.vertx.conduit.entities.User;
 import io.vertx.conduit.handlers.UserHandler;
 import io.vertx.conduit.services.UserService;
@@ -19,7 +18,7 @@ import org.junit.runner.RunWith;
 public class UserTest extends BaseUnitTest {
 
     private io.vertx.conduit.services.reactivex.UserService userService;
-    private static final int TIMEOUT = 5000;
+    private static final int TIMEOUT = 3000;
 
     @Before
     public void setup(TestContext tc) {
@@ -55,6 +54,7 @@ public class UserTest extends BaseUnitTest {
                         tc.assertEquals(user.getEmail(), returnedUser.getString("email"));
                         tc.assertEquals(user.getBio(), returnedUser.getString("bio"));
                         tc.assertNull(returnedUser.getString("image"));
+                        user.setId(user.getId());
                         create.complete();
                     } else {
                         tc.fail(ar.cause());
@@ -169,23 +169,94 @@ public class UserTest extends BaseUnitTest {
         cleanupUser(tc);
         registerUser(tc, user1);
 
-        Async getProfile = tc.async();
+        Async getProfileNoLogin = tc.async();
 
-        // FIXME AR responded while morphia was still querying?
-
-        webClient.get(PORT, "localhost", "/api/user1")
+        webClient.get(PORT, "localhost", "/api/profiles/user1")
                 .putHeader(CONTENT_TYPE, JSON)
                 .send(
                         ar -> {
                             if (ar.succeeded()) {
                                 tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
-                                JsonObject json = ar.result().bodyAsJsonObject();
+                                JsonObject json = ar.result().bodyAsJsonObject().getJsonObject("profile");
                                 tc.assertEquals(user1.toProfileJsonFor(user1), json);
-                                getProfile.complete();
+                                getProfileNoLogin.complete();
                             } else {
                                 tc.fail(ar.cause());
                             }
                         });
+
+        getProfileNoLogin.awaitSuccess();
+
+        loginUser(tc, user1);
+
+        Async getProfileWithLogin = tc.async();
+
+        webClient.get(PORT, "localhost", "/api/profiles/user1")
+                .putHeader(CONTENT_TYPE, JSON)
+                .putHeader(AUTHORIZATION, getJwt(tc))
+                .send(
+                        ar -> {
+                            if (ar.succeeded()) {
+                                tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
+                                JsonObject json = ar.result().bodyAsJsonObject().getJsonObject("profile");
+                                tc.assertEquals(user1.toProfileJsonFor(user1), json);
+                                getProfileWithLogin.complete();
+                            } else {
+                                tc.fail(ar.cause());
+                            }
+                        });
+    }
+
+    @Test(timeout = TIMEOUT)
+    public void testFollow(TestContext tc) {
+        cleanupUser(tc);
+        registerUser(tc, user1);
+        registerUser(tc, user2);
+        loginUser(tc, user1);
+
+        Async follow = tc.async();
+
+        webClient.post(PORT, "localhost", "/api/profiles/user2/follow")
+                .putHeader(CONTENT_TYPE, JSON)
+                .putHeader(AUTHORIZATION, getJwt(tc))
+                .send(
+                        ar -> {
+                            if (ar.succeeded()) {
+                                tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
+                                JsonObject json = ar.result().bodyAsJsonObject().getJsonObject("profile");
+                                JsonObject jsonExpected = user2.toProfileJsonFor(user1);
+                                jsonExpected.put("following", true);
+
+                                tc.assertEquals(jsonExpected, json);
+                                follow.complete();
+                            } else {
+                                tc.fail(ar.cause());
+                            }
+                        });
+
+        follow.awaitSuccess();
+
+        Async unfollow = tc.async();
+
+        webClient.delete(PORT, "localhost", "/api/profiles/user2/follow")
+                .putHeader(CONTENT_TYPE, JSON)
+                .putHeader(AUTHORIZATION, getJwt(tc))
+                .send(
+                        ar -> {
+                            if (ar.succeeded()) {
+                                tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
+                                JsonObject json = ar.result().bodyAsJsonObject().getJsonObject("profile");
+                                JsonObject jsonExpected = user2.toProfileJsonFor(user1);
+                                jsonExpected.put("following", false);
+
+                                tc.assertEquals(jsonExpected, json);
+                                unfollow.complete();
+                            } else {
+                                tc.fail(ar.cause());
+                            }
+                        });
+
+        unfollow.awaitSuccess();
     }
 
     private static String getJwt(TestContext tc) {
