@@ -7,12 +7,10 @@ import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonObject;
-import io.vertx.core.logging.Logger;
 import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTOptions;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
-import logging.ContextLogger;
 import org.springframework.security.crypto.bcrypt.BCrypt;
 import routerutils.BaseHandler;
 import routerutils.Middleware;
@@ -21,8 +19,8 @@ import routerutils.RouteConfig;
 @RouteConfig(path="/api", produces = "application/json")
 public class UserHandler extends BaseHandler {
 
-    private static Logger LOGGER = ContextLogger.create();
-    private static String USER = "user";
+    public final static String TOKEN =  "Bearer";
+    public final static String USER = "user";
 
     private final io.vertx.conduit.services.reactivex.UserService userService;
     private final JWTAuth jwtAuth;
@@ -39,29 +37,34 @@ public class UserHandler extends BaseHandler {
         JsonObject principal = new JsonObject();
         principal.put("_id", id);
         principal.put("username", user.getString("username"));
-        user.put("Bearer", jwtAuth.generateToken(principal, new JWTOptions().setExpiresInMinutes(120)));
+        user.put(TOKEN, jwtAuth.generateToken(principal, new JWTOptions().setExpiresInMinutes(120)));
     }
 
     @RouteConfig(path="/users/login", method=HttpMethod.POST, authRequired=false)
     public void login(RoutingContext event) {
         JsonObject message = event.getBodyAsJson().getJsonObject(USER);
-        userService.rxGetByEmail(message.getString("email"))
-                .subscribe((res, ex) -> {
-                    if (ex != null) {
-                        event.fail(new RuntimeException("Invalid user credentials"));
-                    } else {
-                        String hashed = res.getPassword();
-                        if (BCrypt.checkpw(message.getString("password"), hashed)) {
-                            JsonObject userAuthJson = res.toAuthJson();
-                            appendJwt(userAuthJson, res.getId().toHexString());
-                            event.response()
-                                    .setStatusCode(HttpResponseStatus.CREATED.code())
-                                    .end(Json.encodePrettily(userAuthJson));
-                        } else {
+        if (message != null) {
+            userService.rxGetByEmail(message.getString("email"))
+                    .subscribe((res, ex) -> {
+                        if (ex != null) {
                             event.fail(new RuntimeException("Invalid user credentials"));
+                        } else {
+                            String hashed = res.getPassword();
+                            if (BCrypt.checkpw(message.getString("password"), hashed)) {
+                                JsonObject userAuthJson = res.toAuthJson();
+                                appendJwt(userAuthJson, res.getId().toHexString());
+                                event.response()
+                                        .setStatusCode(HttpResponseStatus.CREATED.code())
+                                        .end(Json.encodePrettily(userAuthJson));
+                            } else {
+                                event.fail(new RuntimeException("Invalid user credentials"));
+                            }
                         }
-                    }
-                });
+                    });
+        } else {
+            event.fail(new RuntimeException("Invalid user credentials"));
+        }
+
     }
 
     private static String setPassword(String password) {
@@ -126,7 +129,7 @@ public class UserHandler extends BaseHandler {
         userService.rxGetById(event.get("userId"))
                 .subscribe((user, ex) -> {
                     if (ex == null) {
-                        event.put("user", user);
+                        event.put(UserHandler.USER, user);
                         event.next();
                     } else {
                         event.fail(ex);
@@ -138,7 +141,7 @@ public class UserHandler extends BaseHandler {
     public void follow(RoutingContext event) {
 
         User profileUser = event.get("profile");
-        User queryingUser = event.get("user");
+        User queryingUser = event.get(UserHandler.USER);
 
         queryingUser.follow(profileUser);
         JsonObject update = new JsonObject().put("$push", new JsonObject().put("following", profileUser.toJson()));
@@ -151,7 +154,7 @@ public class UserHandler extends BaseHandler {
     public void unfollow(RoutingContext event) {
 
         User profileUser = event.get("profile");
-        User queryingUser = event.get("user");
+        User queryingUser = event.get(UserHandler.USER);
 
         queryingUser.unfollow(profileUser);
         JsonObject update = new JsonObject().put("$pop", new JsonObject().put("following", profileUser.toJson()));

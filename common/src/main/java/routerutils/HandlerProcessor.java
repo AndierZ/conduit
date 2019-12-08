@@ -82,7 +82,7 @@ public final class HandlerProcessor {
             try {
                 method.invoke(handler, event);
             } catch (Exception e) {
-                LOGGER.error("Error calling handler {}.{}", e, handler.getClass(), method.getName());
+                LOGGER.error("Error calling handler {}#{} {}", handler.getClass(), method.getName(), e);
             }
         });
     }

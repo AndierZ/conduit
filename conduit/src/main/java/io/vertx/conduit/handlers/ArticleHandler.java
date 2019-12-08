@@ -78,7 +78,7 @@ public class ArticleHandler extends BaseHandler {
         userService.rxGetById(event.get("userId"))
                    .subscribe((user, ex) -> {
                        if (ex == null) {
-                           event.put("user", user);
+                           event.put(UserHandler.USER, user);
                            event.next();
                        } else {
                            event.fail(ex);
@@ -103,7 +103,7 @@ public class ArticleHandler extends BaseHandler {
     @RouteConfig(path="/", method= HttpMethod.POST, middlewares = "extractUser")
     public void create(RoutingContext event) {
         JsonObject message = event.getBodyAsJson().getJsonObject(ARTICLE);
-        User user = event.get("user");
+        User user = event.get(UserHandler.USER);
         message.put("slug", slugify.slugify(message.getString("title")));
         message.put("author", user.toJson());
 
@@ -118,14 +118,14 @@ public class ArticleHandler extends BaseHandler {
         Article article = event.get("article");
         event.response()
                 .setStatusCode(HttpResponseStatus.OK.code())
-                .end(Json.encodePrettily(article.toJsonFor(event.get("user"))));
+                .end(Json.encodePrettily(article.toJsonFor(event.get(UserHandler.USER))));
 
     }
 
     @RouteConfig(path="/:article", method=HttpMethod.POST, middlewares = {"extractArticle", "extractUser"})
     public void update(RoutingContext event){
         Article article = event.get("article");
-        User user = event.get("user");
+        User user = event.get(UserHandler.USER);
 
         if (!Objects.equals(user.getId(), article.getAuthor().getId())) {
             event.fail(new RuntimeException("Invalid User"));
@@ -151,7 +151,7 @@ public class ArticleHandler extends BaseHandler {
     @RouteConfig(path="/:article/favorite", method=HttpMethod.POST, middlewares = {"extractArticle", "extractUser"})
     private void favorite(RoutingContext event) {
         Article article = event.get("article");
-        User user = event.get("user");
+        User user = event.get(UserHandler.USER);
         if (!user.isFavorite(article.getSlug())) {
             user.addFavorite(article.getSlug());
         } else {
@@ -175,7 +175,7 @@ public class ArticleHandler extends BaseHandler {
     @RouteConfig(path="/:article/favorite", method=HttpMethod.DELETE, middlewares = {"extractArticle", "extractUser"})
     private void unfavorite(RoutingContext event) {
         Article article = event.get("article");
-        User user = event.get("user");
+        User user = event.get(UserHandler.USER);
         if (user.isFavorite(article.getSlug())) {
             user.removeFavorite(article.getSlug());
         } else {
@@ -200,7 +200,7 @@ public class ArticleHandler extends BaseHandler {
 
     @RouteConfig(path="/:article/comments", method= HttpMethod.POST, middlewares = {"extractUser", "extractArticle"})
     public void createComment(RoutingContext event) {
-        User user = event.get("user");
+        User user = event.get(UserHandler.USER);
         Article article = event.get("article");
 
         JsonObject message = event.getBodyAsJson().getJsonObject(COMMENT);
@@ -220,7 +220,7 @@ public class ArticleHandler extends BaseHandler {
 
     @RouteConfig(path="/:article/comments", method= HttpMethod.GET, middlewares = {"extractUser", "extractArticle"})
     public void getComments(RoutingContext event) {
-        User user = event.get("user");
+        User user = event.get(UserHandler.USER);
         Article article = event.get("article");
 
         JsonObject comments = new JsonObject();
@@ -235,7 +235,7 @@ public class ArticleHandler extends BaseHandler {
 
     @RouteConfig(path="/:article/comments/:comment", method= HttpMethod.DELETE, middlewares = {"extractUser", "extractComment", "extractArticle"})
     public void deleteComment(RoutingContext event) {
-        User user = event.get("user");
+        User user = event.get(UserHandler.USER);
         Article article = event.get("article");
         Comment comment = event.get("comment");
 
