@@ -24,13 +24,13 @@ import java.util.Objects;
 @RouteConfig(path="/api/articles", produces = "application/json")
 public class ArticleHandler extends BaseHandler {
 
-    private static final String ARTICLE = "article";
-    private static final String COMMENT = "comment";
+    public static final String ARTICLE = "article";
+    public static final String COMMENT = "comment";
 
     private final io.vertx.conduit.services.reactivex.ArticleService articleService;
-    private final Slugify slugify;
     private final io.vertx.conduit.services.reactivex.UserService userService;
     private final io.vertx.conduit.services.reactivex.CommentService commentService;
+    private final Slugify slugify;
 
     public ArticleHandler(Vertx vertx) {
         super(vertx);
@@ -108,7 +108,7 @@ public class ArticleHandler extends BaseHandler {
         message.put("author", user.toJson());
 
         articleService.rxCreate(message)
-                      .map(article -> article.toJsonFor(user))
+                      .map(article -> new JsonObject().put(ARTICLE, article.toJsonFor(user)))
                       .subscribe(res -> handleResponse(event, res, HttpResponseStatus.CREATED), e -> handleError(event, e));
     }
 
@@ -118,7 +118,7 @@ public class ArticleHandler extends BaseHandler {
         Article article = event.get("article");
         event.response()
                 .setStatusCode(HttpResponseStatus.OK.code())
-                .end(Json.encodePrettily(article.toJsonFor(event.get(UserHandler.USER))));
+                .end(Json.encodePrettily(new JsonObject().put(ARTICLE, article.toJsonFor(event.get(UserHandler.USER)))));
 
     }
 
@@ -134,7 +134,7 @@ public class ArticleHandler extends BaseHandler {
         JsonObject message = event.getBodyAsJson().getJsonObject(ARTICLE);
 
         articleService.rxUpdate(article.getSlug(), message)
-                      .map(updatedArticle -> updatedArticle.toJsonFor(user))
+                      .map(updatedArticle -> new JsonObject().put(ARTICLE, updatedArticle.toJsonFor(user)))
                       .subscribe(res -> handleResponse(event, res, HttpResponseStatus.OK), e -> handleError(event, e));
     }
 
@@ -157,7 +157,7 @@ public class ArticleHandler extends BaseHandler {
         } else {
             event.response()
                     .setStatusCode(HttpResponseStatus.OK.code())
-                    .end(Json.encodePrettily(article.toJsonFor(user)));
+                    .end(Json.encodePrettily(new JsonObject().put(ARTICLE, article.toJsonFor(user))));
             return;
         }
         JsonObject update = new JsonObject().put("$push", new JsonObject().put("favorites", article.getSlug()));
@@ -194,7 +194,7 @@ public class ArticleHandler extends BaseHandler {
                     article.setFavoritesCount(count);
                     return articleService.rxUpdate(article.getSlug(), new JsonObject().put("favoritesCount", count));
                 })
-                .map(updatedArticle -> updatedArticle.toJsonFor(user))
+                .map(updatedArticle -> new JsonObject().put(ARTICLE, updatedArticle.toJsonFor(user)))
                 .subscribe(res -> handleResponse(event, res, HttpResponseStatus.OK), e -> handleError(event, e));
     }
 
