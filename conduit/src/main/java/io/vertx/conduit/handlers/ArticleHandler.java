@@ -57,12 +57,12 @@ public class ArticleHandler extends BaseHandler {
 
     @Middleware
     public void extractArticle(RoutingContext event) {
-        String slug = event.request().getParam("article");
+        String slug = event.request().getParam(ARTICLE);
         if (slug != null) {
             articleService.rxGet(slug)
                     .subscribe((article, ex) -> {
                         if (ex == null) {
-                            event.put("article", article);
+                            event.put(ARTICLE, article);
                             event.next();
                         } else {
                             event.fail(ex);
@@ -115,7 +115,7 @@ public class ArticleHandler extends BaseHandler {
     @RouteConfig(path="/:article", method=HttpMethod.GET, middlewares = {"extractArticle", "extractUser"})
     public void get(RoutingContext event){
 
-        Article article = event.get("article");
+        Article article = event.get(ARTICLE);
         event.response()
                 .setStatusCode(HttpResponseStatus.OK.code())
                 .end(Json.encodePrettily(new JsonObject().put(ARTICLE, article.toJsonFor(event.get(UserHandler.USER)))));
@@ -124,7 +124,7 @@ public class ArticleHandler extends BaseHandler {
 
     @RouteConfig(path="/:article", method=HttpMethod.POST, middlewares = {"extractArticle", "extractUser"})
     public void update(RoutingContext event){
-        Article article = event.get("article");
+        Article article = event.get(ARTICLE);
         User user = event.get(UserHandler.USER);
 
         if (!Objects.equals(user.getId(), article.getAuthor().getId())) {
@@ -140,7 +140,7 @@ public class ArticleHandler extends BaseHandler {
 
     @RouteConfig(path="/:article", method=HttpMethod.DELETE, middlewares = {"extractArticle", "extractUser"})
     public void delete(RoutingContext event){
-        Article article = event.get("article");
+        Article article = event.get(ARTICLE);
         if (Objects.equals(event.get("userId"), article.getAuthor().getId())) {
             articleService.rxDelete(article.getSlug());
         } else {
@@ -149,8 +149,8 @@ public class ArticleHandler extends BaseHandler {
     }
 
     @RouteConfig(path="/:article/favorite", method=HttpMethod.POST, middlewares = {"extractArticle", "extractUser"})
-    private void favorite(RoutingContext event) {
-        Article article = event.get("article");
+    public void favorite(RoutingContext event) {
+        Article article = event.get(ARTICLE);
         User user = event.get(UserHandler.USER);
         if (!user.isFavorite(article.getSlug())) {
             user.addFavorite(article.getSlug());
@@ -160,21 +160,21 @@ public class ArticleHandler extends BaseHandler {
                     .end(Json.encodePrettily(new JsonObject().put(ARTICLE, article.toJsonFor(user))));
             return;
         }
-        JsonObject update = new JsonObject().put("$push", new JsonObject().put("favorites", article.getSlug()));
+        JsonObject update = new JsonObject().put("favorites", new JsonObject().put("$push", article.getSlug()));
 
         userService.rxUpdate(user.getId().toHexString(), update)
-                   .flatMap(ignored -> userService.rxGetFavoriteCount(article.getId().toHexString()))
+                   .flatMap(ignored -> userService.rxGetFavoriteCount(article.getSlug()))
                    .flatMap(count -> {
                        article.setFavoritesCount(count);
                        return articleService.rxUpdate(article.getSlug(), new JsonObject().put("favoritesCount", count));
                    })
-                   .map(updatedArticle -> updatedArticle.toJsonFor(user))
+                   .map(updatedArticle -> new JsonObject().put(ARTICLE, updatedArticle.toJsonFor(user)))
                    .subscribe(res -> handleResponse(event, res, HttpResponseStatus.OK), e -> handleError(event, e));
     }
 
     @RouteConfig(path="/:article/favorite", method=HttpMethod.DELETE, middlewares = {"extractArticle", "extractUser"})
-    private void unfavorite(RoutingContext event) {
-        Article article = event.get("article");
+    public void unfavorite(RoutingContext event) {
+        Article article = event.get(ARTICLE);
         User user = event.get(UserHandler.USER);
         if (user.isFavorite(article.getSlug())) {
             user.removeFavorite(article.getSlug());
@@ -184,11 +184,11 @@ public class ArticleHandler extends BaseHandler {
                     .end(Json.encodePrettily(article.toJsonFor(user)));
             return;
         }
-        JsonObject update = new JsonObject().put("$pop", new JsonObject().put("favorites", article.getSlug()));
+        JsonObject update = new JsonObject().put("favorites", new JsonObject().put("$pop", article.getSlug()));
 
         userService.rxUpdate(user.getId().toHexString(), update)
                 .flatMap(ignored -> {
-                    return userService.rxGetFavoriteCount(article.getId().toHexString());
+                    return userService.rxGetFavoriteCount(article.getSlug());
                 })
                 .flatMap(count -> {
                     article.setFavoritesCount(count);
@@ -201,13 +201,13 @@ public class ArticleHandler extends BaseHandler {
     @RouteConfig(path="/:article/comments", method= HttpMethod.POST, middlewares = {"extractUser", "extractArticle"})
     public void createComment(RoutingContext event) {
         User user = event.get(UserHandler.USER);
-        Article article = event.get("article");
+        Article article = event.get(ARTICLE);
 
         JsonObject message = event.getBodyAsJson().getJsonObject(COMMENT);
         message.put("author", user.toJson());
-        message.put("article", article.toJson());
+        message.put(ARTICLE, article.toJson());
 
-        JsonObject update = new JsonObject().put("$push", new JsonObject().put("comments", message));
+        JsonObject update = new JsonObject().put("comments", new JsonObject().put("$push", message));
 
 
         commentService.rxCreate(message)
@@ -221,7 +221,7 @@ public class ArticleHandler extends BaseHandler {
     @RouteConfig(path="/:article/comments", method= HttpMethod.GET, middlewares = {"extractUser", "extractArticle"})
     public void getComments(RoutingContext event) {
         User user = event.get(UserHandler.USER);
-        Article article = event.get("article");
+        Article article = event.get(ARTICLE);
 
         JsonObject comments = new JsonObject();
         JsonArray array = new JsonArray();
@@ -236,11 +236,11 @@ public class ArticleHandler extends BaseHandler {
     @RouteConfig(path="/:article/comments/:comment", method= HttpMethod.DELETE, middlewares = {"extractUser", "extractComment", "extractArticle"})
     public void deleteComment(RoutingContext event) {
         User user = event.get(UserHandler.USER);
-        Article article = event.get("article");
+        Article article = event.get(ARTICLE);
         Comment comment = event.get("comment");
 
         if (comment.getAuthor().getId().equals(user.getId())) {
-            JsonObject update = new JsonObject().put("$pop", new JsonObject().put("comments", comment.toJson()));
+            JsonObject update = new JsonObject().put("comments", new JsonObject().put("$pop", comment.toJson()));
             articleService.rxUpdate(article.getSlug(), update)
             .flatMap(ignored -> commentService.rxDelete(comment.getId().toHexString()))
             .subscribe((ignored, ex) -> {

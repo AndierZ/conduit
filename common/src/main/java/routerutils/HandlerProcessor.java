@@ -11,6 +11,7 @@ import io.vertx.ext.web.handler.AuthHandler;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,6 +33,9 @@ public final class HandlerProcessor {
 
             methods.forEach(method -> {
                 RouteConfig annotation = method.getAnnotation(RouteConfig.class);
+                if (!Modifier.isPublic(method.getModifiers())) {
+                    throw new RuntimeException("Method must be public to work with RouteConfig " + clazz.getName() + "#" + method.getName());
+                }
                 String[] methodConsumes = annotation.consumes();
                 String[] methodProduces = annotation.produces();
                 String methodPath = annotation.path();

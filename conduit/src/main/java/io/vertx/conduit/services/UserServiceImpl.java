@@ -71,7 +71,7 @@ public class UserServiceImpl implements UserService {
 
     private static void handleUser(Handler<AsyncResult<User>> resultHandler, List<User> users, Throwable ex) {
 
-        if (users.size() != 1) {
+        if (users == null || users.size() != 1) {
             resultHandler.handle(Future.failedFuture(new RuntimeException("Couldn't find unique user")));
         }
         else {
@@ -83,8 +83,8 @@ public class UserServiceImpl implements UserService {
         }
     }
 
-    public void getFavoriteCount(String id, Handler<AsyncResult<Integer>> resultHandler){
-        morphiaService.rxGetUser(new JsonObject().put("favorites", new JsonObject().put("$in", new ObjectId(id))))
+    public void getFavoriteCount(String slug, Handler<AsyncResult<Integer>> resultHandler){
+        morphiaService.rxGetUser(new JsonObject().put("favorites", slug))
                       .subscribe((users, ex) -> {
                           if (ex == null) {
                               resultHandler.handle(Future.succeededFuture(users.size()));

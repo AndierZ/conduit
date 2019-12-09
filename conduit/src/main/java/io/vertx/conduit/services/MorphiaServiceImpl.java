@@ -232,21 +232,20 @@ public class MorphiaServiceImpl implements MorphiaService {
                 }
             }
 
+            // FIXME change to make it consistent with mongo format field -> operator -> value
             final UpdateOperations<T> updateOperations = datastore.createUpdateOperations(clazz);
             for(Iterator<Map.Entry<String, Object>> it = update.iterator(); it.hasNext();) {
                 Map.Entry<String, Object> pair = it.next();
-                if(pair.getKey().charAt(0) == '$' && pair.getValue() instanceof JsonObject) {
-                    if ("$push".equals(pair.getKey())) {
-                        JsonObject fields = (JsonObject) pair.getValue();
-                        for(Iterator<Map.Entry<String, Object>> it2 = fields.iterator(); it.hasNext(); ) {
-                            Map.Entry<String, Object> field = it2.next();
-                            updateOperations.addToSet(field.getKey(), field.getValue());
-                        }
-                    } else if ("$pop".equals(pair.getKey())) {
-                        JsonObject fields = (JsonObject) pair.getValue();
-                        for(Iterator<Map.Entry<String, Object>> it2 = fields.iterator(); it.hasNext(); ) {
-                            Map.Entry<String, Object> field = it2.next();
-                            updateOperations.removeAll(field.getKey(), field.getValue());
+                if(pair.getValue() instanceof JsonObject) {
+                    String field = pair.getKey();
+                    JsonObject operations = (JsonObject) pair.getValue();
+                    for(Iterator<Map.Entry<String, Object>> it2 = operations.iterator(); it2.hasNext(); ) {
+                        Map.Entry<String, Object> operation = it2.next();
+                        String operator = operation.getKey();
+                        if ("$push".equals(operator)) {
+                            updateOperations.addToSet(field, operation.getValue());
+                        } else if ("$pop".equals(operator)) {
+                            updateOperations.removeAll(field, operation.getValue());
                         }
                     }
                 } else {

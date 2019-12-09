@@ -29,7 +29,7 @@ public class ArticleTest extends TestBase {
                         .put(ArticleHandler.ARTICLE, testArticle1.toJson()
                         ), ar -> {
                     if (ar.succeeded()) {
-                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject("article");
+                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.ARTICLE);
                         tc.assertNotNull(json);
                         JsonObject expected = testArticle1.toJsonFor(user1);
                         expected.put("_id", json.getString("_id"));
@@ -42,7 +42,6 @@ public class ArticleTest extends TestBase {
 
         createArticle.awaitSuccess();
 
-
         Async updateArticle = tc.async();
 
         // Must include the forward slash at the end
@@ -54,7 +53,7 @@ public class ArticleTest extends TestBase {
                         .put(ArticleHandler.ARTICLE, new JsonObject().put("body", "updatedBody")
                         ), ar -> {
                     if (ar.succeeded()) {
-                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject("article");
+                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.ARTICLE);
                         tc.assertNotNull(json);
                         JsonObject expected = testArticle1.toJsonFor(user1);
                         expected.put("_id", json.getString("_id"));
@@ -69,6 +68,53 @@ public class ArticleTest extends TestBase {
 
         updateArticle.awaitSuccess();
 
+        Async favoriteArticle = tc.async();
+
+        webClient.post(PORT, "localhost", "/api/articles/first-article/favorite")
+                .putHeader(CONTENT_TYPE, JSON)
+                .putHeader(AUTHORIZATION, getJwt(tc))
+                .send(ar -> {
+                    if (ar.succeeded()) {
+                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.ARTICLE);
+                        tc.assertNotNull(json);
+                        JsonObject expected = testArticle1.toJsonFor(user1);
+                        expected.put("_id", json.getString("_id"));
+                        expected.put("version", json.getLong("version"));
+                        expected.put("body", "updatedBody");
+                        expected.put("favoritesCount", 1);
+                        expected.put("favorited", true);
+                        tc.assertEquals(expected, json);
+                        favoriteArticle.complete();
+                    } else {
+                        tc.fail();
+                    }
+                });
+
+        favoriteArticle.awaitSuccess();
+
+        Async unfavoriteArticle = tc.async();
+
+        webClient.delete(PORT, "localhost", "/api/articles/first-article/favorite")
+                .putHeader(CONTENT_TYPE, JSON)
+                .putHeader(AUTHORIZATION, getJwt(tc))
+                .send(ar -> {
+                    if (ar.succeeded()) {
+                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.ARTICLE);
+                        tc.assertNotNull(json);
+                        JsonObject expected = testArticle1.toJsonFor(user1);
+                        expected.put("_id", json.getString("_id"));
+                        expected.put("version", json.getLong("version"));
+                        expected.put("body", "updatedBody");
+                        expected.put("favoritesCount", 0);
+                        expected.put("favorited", false);
+                        tc.assertEquals(expected, json);
+                        unfavoriteArticle.complete();
+                    } else {
+                        tc.fail();
+                    }
+                });
+
+        unfavoriteArticle.awaitSuccess();
 
         cleanupArticles(tc);
         cleanupUser(tc);

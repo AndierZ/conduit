@@ -1,5 +1,6 @@
 package io.vertx.conduit.verticles;
 
+import io.vertx.conduit.handlers.ArticleHandler;
 import io.vertx.conduit.services.ArticleService;
 import io.vertx.conduit.services.ArticleServiceImpl;
 import io.vertx.conduit.services.UserService;
@@ -36,7 +37,7 @@ public class ArticleServiceVerticle extends AbstractVerticle {
                     .setAddress(ArticleService.ADDRESS)
                     .register(ArticleService.class, service);
 
-            Record record = EventBusService.createRecord("article", ArticleService.ADDRESS, ArticleService.class.getName());
+            Record record = EventBusService.createRecord(ArticleHandler.ARTICLE, ArticleService.ADDRESS, ArticleService.class.getName());
             discovery.publish(record, ar -> {
                 if (ar.succeeded()) {
                     this.record = record;

@@ -22,7 +22,7 @@ public interface UserService {
 
     void update(String id, JsonObject update, Handler<AsyncResult<User>> resultHandler);
 
-    void getFavoriteCount(String id, Handler<AsyncResult<Integer>> resultHandler);
+    void getFavoriteCount(String slug, Handler<AsyncResult<Integer>> resultHandler);
 
     void deleteByUsername(String username, Handler<AsyncResult<Long>> resultHandler);
 }
