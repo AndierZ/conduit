@@ -244,13 +244,13 @@ public class ArticleHandler extends BaseHandler {
         Comment comment = event.get(COMMENT);
 
         if (comment.getAuthor().getId().equals(user.getId())) {
-            JsonObject update = new JsonObject().put(COMMENT, new JsonObject().put("$pop", new JsonObject().put("_id", comment.getId().toByteArray())));
+            JsonObject update = new JsonObject().put("comments", new JsonObject().put("$pop", new JsonObject().put("_id", comment.getId().toHexString())));
             articleService.rxUpdate(article.getSlug(), update)
                           .flatMap(ignored -> commentService.rxDelete(comment.getId().toHexString()))
                           .subscribe((ignored, ex) -> {
                                 if (ex == null) {
                                     event.response()
-                                            .setStatusCode(HttpResponseStatus.NO_CONTENT.code())
+                                            .setStatusCode(HttpResponseStatus.OK.code())
                                             .end();
                                 } else {
                                     event.fail(ex);

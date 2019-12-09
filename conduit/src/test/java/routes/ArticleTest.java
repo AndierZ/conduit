@@ -1,5 +1,6 @@
 package routes;
 
+import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.conduit.handlers.ArticleHandler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
@@ -13,7 +14,7 @@ import org.junit.runner.RunWith;
 @RunWith(VertxUnitRunner.class)
 public class ArticleTest extends TestBase {
 
-    @Test(timeout = 120000)
+    @Test(timeout = TIMEOUT)
     public void testCreateArticle(TestContext tc) {
         cleanupUser(tc);
         cleanupArticles(tc);
@@ -31,6 +32,7 @@ public class ArticleTest extends TestBase {
                         .put(ArticleHandler.ARTICLE, testArticle1.toJson()
                         ), ar -> {
                     if (ar.succeeded()) {
+                        tc.assertEquals(HttpResponseStatus.CREATED.code(), ar.result().statusCode());
                         JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.ARTICLE);
                         tc.assertNotNull(json);
                         JsonObject expected = testArticle1.toJsonFor(user1);
@@ -56,6 +58,7 @@ public class ArticleTest extends TestBase {
                         .put(ArticleHandler.ARTICLE, new JsonObject().put("body", "updatedBody")
                         ), ar -> {
                     if (ar.succeeded()) {
+                        tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
                         JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.ARTICLE);
                         tc.assertNotNull(json);
                         JsonObject expected = testArticle1.toJsonFor(user1);
@@ -78,6 +81,7 @@ public class ArticleTest extends TestBase {
                 .putHeader(AUTHORIZATION, getJwt(tc))
                 .send(ar -> {
                     if (ar.succeeded()) {
+                        tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
                         JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.ARTICLE);
                         tc.assertNotNull(json);
                         JsonObject expected = testArticle1.toJsonFor(user1);
@@ -102,6 +106,7 @@ public class ArticleTest extends TestBase {
                 .putHeader(AUTHORIZATION, getJwt(tc))
                 .send(ar -> {
                     if (ar.succeeded()) {
+                        tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
                         JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.ARTICLE);
                         tc.assertNotNull(json);
                         JsonObject expected = testArticle1.toJsonFor(user1);
@@ -127,8 +132,10 @@ public class ArticleTest extends TestBase {
                 .sendJsonObject(new JsonObject().put("comment", new JsonObject().put("body", "a comment")),
                     ar -> {
                     if (ar.succeeded()) {
+                        tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
                         JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.COMMENT);
                         tc.assertNotNull(json);
+                        tc.put("commentId", json.getString("_id"));
                         tc.assertEquals(testArticle1.getId().toHexString(), json.getString("article"));
                         tc.assertEquals(testArticle1.getAuthor().getUsername(), json.getJsonObject("author").getString("username"));
                         tc.assertEquals("a comment", json.getString("body"));
@@ -140,7 +147,6 @@ public class ArticleTest extends TestBase {
 
         createComment.awaitSuccess();
 
-        // Cannot comment on someone's own article, or else stack overflow trying to convert to json!!?
         Async getComment = tc.async();
 
         webClient.get(PORT, "localhost", "/api/articles/first-article/comments")
@@ -149,6 +155,7 @@ public class ArticleTest extends TestBase {
                 .sendJsonObject(new JsonObject().put("comment", new JsonObject().put("body", "a comment")),
                         ar -> {
                             if (ar.succeeded()) {
+                                tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
                                 JsonArray json = ar.result().bodyAsJsonObject().getJsonArray("comments");
                                 tc.assertNotNull(json);
                                 tc.assertEquals(1, json.size());
@@ -160,6 +167,23 @@ public class ArticleTest extends TestBase {
                         });
 
         getComment.awaitSuccess();
+
+        Async deleteComment = tc.async();
+
+        webClient.delete(PORT, "localhost", "/api/articles/first-article/comments/" + tc.get("commentId"))
+                .putHeader(CONTENT_TYPE, JSON)
+                .putHeader(AUTHORIZATION, getJwt(tc))
+                .send(
+                        ar -> {
+                            if (ar.succeeded()) {
+                                tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
+                                deleteComment.complete();
+                            } else {
+                                tc.fail();
+                            }
+                        });
+
+        deleteComment.awaitSuccess();
 
         cleanupArticles(tc);
         cleanupUser(tc);

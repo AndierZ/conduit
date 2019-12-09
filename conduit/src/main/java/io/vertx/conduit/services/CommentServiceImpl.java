@@ -43,7 +43,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public void get(String id, Handler<AsyncResult<Comment>> resultHandler) {
-        morphiaService.rxGetComment(new JsonObject().put("id", id))
+        morphiaService.rxGetComment(new JsonObject().put("_id", id))
                 .subscribe((comments, ex) -> handleComment(resultHandler, comments, ex));
     }
 
@@ -59,12 +59,12 @@ public class CommentServiceImpl implements CommentService {
                 });
     }
 
-    private static void handleComment(Handler<AsyncResult<Comment>> resultHandler, List<Comment> articles, Throwable ex) {
-        if (articles.size() != 1) {
+    private static void handleComment(Handler<AsyncResult<Comment>> resultHandler, List<Comment> comments, Throwable ex) {
+        if (comments == null || comments.size() != 1) {
             resultHandler.handle(Future.failedFuture(new RuntimeException("Couldn't find unique comment")));
         } else {
             if (ex == null) {
-                resultHandler.handle(Future.succeededFuture(articles.get(0)));
+                resultHandler.handle(Future.succeededFuture(comments.get(0)));
             } else {
                 resultHandler.handle(Future.failedFuture(ex));
             }

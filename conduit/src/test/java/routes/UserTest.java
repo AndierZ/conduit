@@ -133,7 +133,7 @@ public class UserTest extends TestBase {
                         });
     }
 
-    @Test(timeout = 120000)
+    @Test(timeout = TIMEOUT)
     public void testFollow(TestContext tc) {
         cleanupUser(tc);
         registerUser(tc, user1);
