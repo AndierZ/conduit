@@ -207,7 +207,7 @@ public class ArticleHandler extends BaseHandler {
 
         JsonObject message = event.getBodyAsJson().getJsonObject(COMMENT);
         message.put("author", user.toJson());
-        message.put(ARTICLE, article.toJson());
+        message.put(ARTICLE, article.getId().toHexString());
 
         commentService.rxCreate(message)
                       .map(comment -> {

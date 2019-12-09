@@ -5,6 +5,7 @@ import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
+import org.bson.types.ObjectId;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -34,6 +35,7 @@ public class ArticleTest extends TestBase {
                         JsonObject expected = testArticle1.toJsonFor(user1);
                         expected.put("_id", json.getString("_id"));
                         tc.assertEquals(expected, json);
+                        testArticle1.setId(new ObjectId(json.getString("_id")));
                         createArticle.complete();
                     } else {
                         tc.fail();
@@ -126,7 +128,7 @@ public class ArticleTest extends TestBase {
                     if (ar.succeeded()) {
                         JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.COMMENT);
                         tc.assertNotNull(json);
-                        tc.assertEquals(testArticle1.getSlug(), json.getJsonObject("article").getString("slug"));
+                        tc.assertEquals(testArticle1.getId().toHexString(), json.getString("article"));
                         tc.assertEquals(testArticle1.getAuthor().getUsername(), json.getJsonObject("author").getString("username"));
                         tc.assertEquals("a comment", json.getString("body"));
                         createComment.complete();
