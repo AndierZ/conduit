@@ -36,6 +36,13 @@
 32. add annotation for middle ware methods
 
 add unit tests
+User
+Article
+Comment
+
+cleanup string constants
+Add morphia method to get count more efficiently
+
 
 later
     populate base fields (in the GUI or at the very end, i.e. db side?)

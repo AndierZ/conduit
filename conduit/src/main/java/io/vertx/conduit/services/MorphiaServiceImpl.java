@@ -232,7 +232,6 @@ public class MorphiaServiceImpl implements MorphiaService {
                 }
             }
 
-            // FIXME change to make it consistent with mongo format field -> operator -> value
             final UpdateOperations<T> updateOperations = datastore.createUpdateOperations(clazz);
             for(Iterator<Map.Entry<String, Object>> it = update.iterator(); it.hasNext();) {
                 Map.Entry<String, Object> pair = it.next();
@@ -242,10 +241,18 @@ public class MorphiaServiceImpl implements MorphiaService {
                     for(Iterator<Map.Entry<String, Object>> it2 = operations.iterator(); it2.hasNext(); ) {
                         Map.Entry<String, Object> operation = it2.next();
                         String operator = operation.getKey();
+                        Object value = operation.getValue();
+                        if (value instanceof JsonObject) {
+                            JsonObject valueJson = (JsonObject) value;
+                            if (valueJson.size() == 1 && valueJson.getString("_id") != null) {
+                                value = new ObjectId(valueJson.getString("_id"));
+                            }
+                        }
+
                         if ("$push".equals(operator)) {
-                            updateOperations.addToSet(field, operation.getValue());
+                            updateOperations.addToSet(field, value);
                         } else if ("$pop".equals(operator)) {
-                            updateOperations.removeAll(field, operation.getValue());
+                            updateOperations.removeAll(field, value);
                         }
                     }
                 } else {
