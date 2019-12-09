@@ -22,6 +22,7 @@ import io.vertx.ext.web.client.WebClient;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
 import org.junit.After;
 import org.junit.Before;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 
 @RunWith(VertxUnitRunner.class)
@@ -183,6 +184,11 @@ public class TestBase {
 
     protected static String getJwt(TestContext tc) {
         return UserHandler.TOKEN + " " + tc.get("jwt").toString();
+    }
+
+    @Test
+    public void testSetup(TestContext testContext){
+        testContext.assertTrue(true);
     }
 
     @After
