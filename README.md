@@ -36,22 +36,18 @@
 32. add annotation for middle ware methods
 33. Done - User unit tests
 34. Done - Article unit tests
+35. Comment unit tests
 
-Comment unit tests
 Query unit tests
 
 cleanup string constants
 Put all middleware in a shared base class
-Add morphia method to get count more efficiently
+add custom jwt handler to expect "token" instead of "bearer"
 
-
-later
+After back from vacation:
+    Use long for entity id
+    Add postgres service to replace mongodb
     populate base fields (in the GUI or at the very end, i.e. db side?)
-    better deal with event.fail(e), instead of just showing internal server error?
-    add custom jwt handler to expect "token" instead of "bearer"
-
-security review
-Deploy to aws as a single docker image
-Dockerize each verticle and deploy in a cluster
-Add load balancer in front of the http verticles
-look into using protobuf as customized codec for service proxy
+    security review
+    Dockerize each verticle and deploy to AWS
+    look into using protobuf as customized codec for service proxy
