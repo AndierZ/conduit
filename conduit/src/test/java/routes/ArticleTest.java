@@ -1,6 +1,7 @@
 package routes;
 
 import io.vertx.conduit.handlers.ArticleHandler;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -148,8 +149,10 @@ public class ArticleTest extends TestBase {
                 .sendJsonObject(new JsonObject().put("comment", new JsonObject().put("body", "a comment")),
                         ar -> {
                             if (ar.succeeded()) {
-                                JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.COMMENT);
+                                JsonArray json = ar.result().bodyAsJsonObject().getJsonArray("comments");
                                 tc.assertNotNull(json);
+                                tc.assertEquals(1, json.size());
+                                tc.assertEquals("a comment", json.getJsonObject(0).getString("body"));
                                 getComment.complete();
                             } else {
                                 tc.fail();

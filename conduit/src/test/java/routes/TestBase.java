@@ -11,6 +11,7 @@ import io.vertx.conduit.services.UserService;
 import io.vertx.conduit.verticles.*;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -74,8 +75,8 @@ public class TestBase {
         user1 = new User(user1Json);
         user2 = new User(user2Json);
 
-        JsonObject article1Json = new JsonObject().put("title", "first article").put("slug", "first-article").put("description", "We have to test it out.").put("body", "Not much to say");
-        JsonObject article2Json = new JsonObject().put("title", "second article").put("slug", "second-article").put("description", "Last article is really funny").put("body", "It's not over");
+        JsonObject article1Json = new JsonObject().put("title", "first article").put("slug", "first-article").put("description", "We have to test it out.").put("body", "Not much to say").put("comments", new JsonArray());
+        JsonObject article2Json = new JsonObject().put("title", "second article").put("slug", "second-article").put("description", "Last article is really funny").put("body", "It's not over").put("comments", new JsonArray());;
 
         testArticle1 = new Article(article1Json);
         testArticle2 = new Article(article2Json);

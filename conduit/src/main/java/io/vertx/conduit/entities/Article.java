@@ -129,4 +129,8 @@ public class Article extends Base {
     public List<Comment> getComments() {
         return comments;
     }
+
+    public void setComments(List<Comment> comments) {
+        this.comments = comments;
+    }
 }
