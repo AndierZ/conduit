@@ -88,11 +88,11 @@ public class ArticleHandler extends BaseHandler {
 
     @Middleware
     public void extractComment(RoutingContext event) {
-        String commentId = event.request().getParam("comment");
+        String commentId = event.request().getParam(COMMENT);
         commentService.rxGet(commentId)
                 .subscribe((comment, ex) -> {
                     if (ex == null) {
-                        event.put("comment", comment);
+                        event.put(COMMENT, comment);
                         event.next();
                     } else {
                         event.fail(ex);
@@ -237,10 +237,10 @@ public class ArticleHandler extends BaseHandler {
     public void deleteComment(RoutingContext event) {
         User user = event.get(UserHandler.USER);
         Article article = event.get(ARTICLE);
-        Comment comment = event.get("comment");
+        Comment comment = event.get(COMMENT);
 
         if (comment.getAuthor().getId().equals(user.getId())) {
-            JsonObject update = new JsonObject().put("comments", new JsonObject().put("$pop", comment.toJson()));
+            JsonObject update = new JsonObject().put(COMMENT, new JsonObject().put("$pop", comment.toJson()));
             articleService.rxUpdate(article.getSlug(), update)
             .flatMap(ignored -> commentService.rxDelete(comment.getId().toHexString()))
             .subscribe((ignored, ex) -> {
