@@ -13,7 +13,9 @@ public class Comment extends Base {
 
     public Comment() {}
 
-    public Comment(JsonObject jsonObject) {}
+    public Comment(JsonObject jsonObject) {
+        fromJson(jsonObject);
+    }
 
     private String body;
 

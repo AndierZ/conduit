@@ -1,9 +1,6 @@
 package io.vertx.conduit;
 
-import io.vertx.conduit.verticles.ArticleServiceVerticle;
-import io.vertx.conduit.verticles.HttpVerticle;
-import io.vertx.conduit.verticles.MorphiaServiceVerticle;
-import io.vertx.conduit.verticles.UserServiceVerticle;
+import io.vertx.conduit.verticles.*;
 import io.vertx.config.ConfigRetriever;
 import io.vertx.config.ConfigRetrieverOptions;
 import io.vertx.config.ConfigStoreOptions;
@@ -27,6 +24,7 @@ public class App extends AbstractVerticle {
                     deployVerticle(HttpVerticle.class, deploymentOptions),
                     deployVerticle(UserServiceVerticle.class, deploymentOptions),
                     deployVerticle(ArticleServiceVerticle.class, deploymentOptions),
+                    deployVerticle(CommentServiceVerticle.class, deploymentOptions),
                     deployVerticle(MorphiaServiceVerticle.class, deploymentOptions))
                 .setHandler(ar2 -> {
                     if (ar2.succeeded()) {

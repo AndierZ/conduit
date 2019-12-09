@@ -34,13 +34,14 @@
 30. add tags
 31. add query routes
 32. add annotation for middle ware methods
+33. Done - User unit tests
+34. Done - Article unit tests
 
-add unit tests
-User
-Article
-Comment
+Comment unit tests
+Query unit tests
 
 cleanup string constants
+Put all middleware in a shared base class
 Add morphia method to get count more efficiently
 
 

@@ -8,10 +8,7 @@ import io.vertx.conduit.handlers.UserHandler;
 import io.vertx.conduit.services.ArticleService;
 import io.vertx.conduit.services.CommentService;
 import io.vertx.conduit.services.UserService;
-import io.vertx.conduit.verticles.ArticleServiceVerticle;
-import io.vertx.conduit.verticles.HttpVerticle;
-import io.vertx.conduit.verticles.MorphiaServiceVerticle;
-import io.vertx.conduit.verticles.UserServiceVerticle;
+import io.vertx.conduit.verticles.*;
 import io.vertx.core.DeploymentOptions;
 import io.vertx.core.Vertx;
 import io.vertx.core.json.JsonObject;
@@ -90,6 +87,7 @@ public class TestBase {
         vertx.deployVerticle(HttpVerticle.class.getName(), options, tc.asyncAssertSuccess());
         vertx.deployVerticle(MorphiaServiceVerticle.class.getName(), options, tc.asyncAssertSuccess());
         vertx.deployVerticle(UserServiceVerticle.class.getName(), options, tc.asyncAssertSuccess());
+        vertx.deployVerticle(CommentServiceVerticle.class.getName(), options, tc.asyncAssertSuccess());
 
         {
             ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(UserService.ADDRESS);

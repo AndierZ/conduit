@@ -116,6 +116,46 @@ public class ArticleTest extends TestBase {
 
         unfavoriteArticle.awaitSuccess();
 
+        Async createComment = tc.async();
+
+        webClient.post(PORT, "localhost", "/api/articles/first-article/comments")
+                .putHeader(CONTENT_TYPE, JSON)
+                .putHeader(AUTHORIZATION, getJwt(tc))
+                .sendJsonObject(new JsonObject().put("comment", new JsonObject().put("body", "a comment")),
+                    ar -> {
+                    if (ar.succeeded()) {
+                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.COMMENT);
+                        tc.assertNotNull(json);
+                        tc.assertEquals(testArticle1.getSlug(), json.getJsonObject("article").getString("slug"));
+                        tc.assertEquals(testArticle1.getAuthor().getUsername(), json.getJsonObject("author").getString("username"));
+                        tc.assertEquals("a comment", json.getString("body"));
+                        createComment.complete();
+                    } else {
+                        tc.fail();
+                    }
+                });
+
+        createComment.awaitSuccess();
+
+        // Cannot comment on someone's own article, or else stack overflow trying to convert to json!!?
+        Async getComment = tc.async();
+
+        webClient.get(PORT, "localhost", "/api/articles/first-article/comments")
+                .putHeader(CONTENT_TYPE, JSON)
+                .putHeader(AUTHORIZATION, getJwt(tc))
+                .sendJsonObject(new JsonObject().put("comment", new JsonObject().put("body", "a comment")),
+                        ar -> {
+                            if (ar.succeeded()) {
+                                JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.COMMENT);
+                                tc.assertNotNull(json);
+                                getComment.complete();
+                            } else {
+                                tc.fail();
+                            }
+                        });
+
+        getComment.awaitSuccess();
+
         cleanupArticles(tc);
         cleanupUser(tc);
     }

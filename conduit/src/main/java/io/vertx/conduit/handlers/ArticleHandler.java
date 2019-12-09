@@ -2,6 +2,7 @@ package io.vertx.conduit.handlers;
 
 import com.github.slugify.Slugify;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import io.reactivex.Observable;
 import io.vertx.conduit.entities.Article;
 import io.vertx.conduit.entities.Comment;
 import io.vertx.conduit.entities.User;
@@ -15,6 +16,7 @@ import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
+import javafx.util.Pair;
 import routerutils.BaseHandler;
 import routerutils.Middleware;
 import routerutils.RouteConfig;
@@ -207,14 +209,14 @@ public class ArticleHandler extends BaseHandler {
         message.put("author", user.toJson());
         message.put(ARTICLE, article.toJson());
 
-        JsonObject update = new JsonObject().put("comments", new JsonObject().put("$push", message));
-
-
         commentService.rxCreate(message)
-                      .zipWith(articleService.rxUpdate(article.getSlug(), update), (comment, updatedArticle) -> {
+                      .map(comment -> {
+                          JsonObject update = new JsonObject().put("comments", new JsonObject().put("$push", new JsonObject().put("_id", comment.getId().toHexString())));
+                          // FIXME how can we avoid this?
+                          articleService.rxUpdate(article.getSlug(), update).subscribe();
                           return comment;
                       })
-                      .map(comment -> comment.toJsonFor(user))
+                      .map(comment -> new JsonObject().put("comment", comment.toJsonFor(user)))
                       .subscribe(res -> handleResponse(event, res, HttpResponseStatus.OK), e -> handleError(event, e));
     }
 
@@ -225,7 +227,9 @@ public class ArticleHandler extends BaseHandler {
 
         JsonObject comments = new JsonObject();
         JsonArray array = new JsonArray();
-        article.getComments().forEach(x -> array.add(x.toJsonFor(user)));
+        if (article.getComments() != null) {
+            article.getComments().forEach(x -> array.add(x.toJsonFor(user)));
+        }
         comments.put("comments", array);
 
         event.response()
@@ -240,18 +244,18 @@ public class ArticleHandler extends BaseHandler {
         Comment comment = event.get(COMMENT);
 
         if (comment.getAuthor().getId().equals(user.getId())) {
-            JsonObject update = new JsonObject().put(COMMENT, new JsonObject().put("$pop", comment.toJson()));
+            JsonObject update = new JsonObject().put(COMMENT, new JsonObject().put("$pop", new JsonObject().put("_id", comment.getId().toByteArray())));
             articleService.rxUpdate(article.getSlug(), update)
-            .flatMap(ignored -> commentService.rxDelete(comment.getId().toHexString()))
-            .subscribe((ignored, ex) -> {
-                if (ex == null) {
-                    event.response()
-                            .setStatusCode(HttpResponseStatus.NO_CONTENT.code())
-                            .end();
-                } else {
-                    event.fail(ex);
-                }
-            });
+                          .flatMap(ignored -> commentService.rxDelete(comment.getId().toHexString()))
+                          .subscribe((ignored, ex) -> {
+                                if (ex == null) {
+                                    event.response()
+                                            .setStatusCode(HttpResponseStatus.NO_CONTENT.code())
+                                            .end();
+                                } else {
+                                    event.fail(ex);
+                              }
+                          });
 
         } else {
             event.fail(new RuntimeException("Invalid user"));
