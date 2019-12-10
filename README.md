@@ -45,6 +45,18 @@ add custom jwt handler to expect "token" instead of "bearer"
 populate base fields (in the GUI or at the very end, i.e. db side?)
 
 What I don't like about Vert.x + rxJava2 + Morphia
+    Really don't like how ObjectId works and the fact that it can be null
+    Certain join-like queries using morphia and mongodb is a little painful
+    Still can't avoid relationships
+    Still have to deal with a lot of mongodb operators and quries
+    rxJava2 is a little rough to debug
+    Limitations of Vert.x
+        how services work
+        what type of arguments can be passed into a service
+        message codec for event bus messages
+        lack of ability to customize transport layer (multicast, back pressure and etc)
+
+
 
 next steps:
     New project using kotlin
