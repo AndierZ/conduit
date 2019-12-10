@@ -67,6 +67,7 @@ public class UserHandler extends ConduitHandler {
     @RouteConfig(path="/users", method=HttpMethod.POST, authRequired=false)
     public void register(RoutingContext event) {
         JsonObject message = event.getBodyAsJson().getJsonObject(USER);
+        setCreateFields(event, message);
         message.put("password", setPassword(message.getString("password")));
         userService.rxCreate(message)
                 .subscribe(res -> handleResponse(event, res.toAuthJson(), HttpResponseStatus.CREATED), e -> handleError(event, e));
@@ -75,6 +76,7 @@ public class UserHandler extends ConduitHandler {
     @RouteConfig(path="/user", method = HttpMethod.POST)
     public void put(RoutingContext event) {
         JsonObject message = event.getBodyAsJson().getJsonObject(USER);
+        setUpdateFields(event, message);
         userService.rxUpdate(event.get("userId"), message)
                 .subscribe(res -> handleResponse(event, res.toAuthJson(), HttpResponseStatus.OK), e -> handleError(event, e));
     }

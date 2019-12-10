@@ -28,6 +28,7 @@ public class ArticleHandler extends ConduitHandler {
     @RouteConfig(path="/", method= HttpMethod.POST, middlewares = "extractUser")
     public void create(RoutingContext event) {
         JsonObject message = event.getBodyAsJson().getJsonObject(ARTICLE);
+        setCreateFields(event, message);
         User user = event.get(ConduitHandler.USER);
         message.put("slug", slugify.slugify(message.getString("title")));
         message.put("author", user.toJson());
@@ -57,6 +58,7 @@ public class ArticleHandler extends ConduitHandler {
         }
 
         JsonObject message = event.getBodyAsJson().getJsonObject(ARTICLE);
+        setUpdateFields(event, message);
 
         articleService.rxUpdate(article.getSlug(), message)
                       .map(updatedArticle -> new JsonObject().put(ARTICLE, updatedArticle.toJsonFor(user)))
@@ -131,6 +133,7 @@ public class ArticleHandler extends ConduitHandler {
         JsonObject message = event.getBodyAsJson().getJsonObject(COMMENT);
         message.put("author", user.toJson());
         message.put(ARTICLE, article.getId().toHexString());
+        setCreateFields(event, message);
 
         commentService.rxCreate(message)
                       .map(comment -> {

@@ -197,6 +197,8 @@ public class TestBase {
                         tc.assertNotNull(json);
                         JsonObject expected = article.toJsonFor(user1);
                         expected.put("_id", json.getString("_id"));
+                        expected.put("createTime", json.getLong("createTime"));
+                        expected.put("createUser", json.getString("createUser"));
                         tc.assertEquals(expected, json);
                         article.setId(new ObjectId(json.getString("_id")));
                         createArticle.complete();

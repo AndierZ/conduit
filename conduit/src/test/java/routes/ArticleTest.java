@@ -40,6 +40,10 @@ public class ArticleTest extends TestBase {
                         expected.put("_id", json.getString("_id"));
                         expected.put("version", json.getLong("version"));
                         expected.put("body", "updatedBody");
+                        expected.put("createTime", json.getLong("createTime"));
+                        expected.put("createUser", json.getString("createUser"));
+                        expected.put("updateTime", json.getLong("updateTime"));
+                        expected.put("updateUser", json.getString("updateUser"));
                         tc.assertEquals(expected, json);
                         updateArticle.complete();
                     } else {
@@ -65,6 +69,10 @@ public class ArticleTest extends TestBase {
                         expected.put("body", "updatedBody");
                         expected.put("favoritesCount", 1);
                         expected.put("favorited", true);
+                        expected.put("createTime", json.getLong("createTime"));
+                        expected.put("createUser", json.getString("createUser"));
+                        expected.put("updateTime", json.getLong("updateTime"));
+                        expected.put("updateUser", json.getString("updateUser"));
                         tc.assertEquals(expected, json);
                         favoriteArticle.complete();
                     } else {
@@ -90,6 +98,10 @@ public class ArticleTest extends TestBase {
                         expected.put("body", "updatedBody");
                         expected.put("favoritesCount", 0);
                         expected.put("favorited", false);
+                        expected.put("createTime", json.getLong("createTime"));
+                        expected.put("createUser", json.getString("createUser"));
+                        expected.put("updateTime", json.getLong("updateTime"));
+                        expected.put("updateUser", json.getString("updateUser"));
                         tc.assertEquals(expected, json);
                         unfavoriteArticle.complete();
                     } else {

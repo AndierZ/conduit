@@ -14,7 +14,7 @@ import org.junit.runner.RunWith;
 @RunWith(VertxUnitRunner.class)
 public class QueryTest extends TestBase {
 
-    @Test(timeout = TIMEOUT)
+    @Test(timeout = 120000)
     public void testQuery(TestContext tc) {
         cleanupUser(tc);
         cleanupArticles(tc);
@@ -42,6 +42,9 @@ public class QueryTest extends TestBase {
                         expected.put("version", json.getLong("version"));
                         expected.put("favoritesCount", 1);
                         expected.put("favorited", true);
+                        expected.put("createTime", json.getLong("createTime"));
+                        expected.put("createUser", json.getString("createUser"));
+                        expected.put("updateTime", json.getLong("updateTime"));
                         tc.assertEquals(expected, json);
                         favoriteArticle.complete();
                     } else {
@@ -147,8 +150,9 @@ public class QueryTest extends TestBase {
                                 JsonArray articles = res.getJsonArray("articles");
                                 tc.assertEquals(2, articles.size());
 
-                                tc.assertEquals(testArticle1.getId().toHexString(), articles.getJsonObject(0).getString("_id"));
-                                tc.assertEquals(testArticle2.getId().toHexString(), articles.getJsonObject(1).getString("_id"));
+                                // ordered by create time in descending order
+                                tc.assertEquals(testArticle2.getId().toHexString(), articles.getJsonObject(0).getString("_id"));
+                                tc.assertEquals(testArticle1.getId().toHexString(), articles.getJsonObject(1).getString("_id"));
                                 feedQuery.complete();
                             } else {
                                 tc.fail();

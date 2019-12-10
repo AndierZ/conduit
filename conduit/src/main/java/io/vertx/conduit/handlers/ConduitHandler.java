@@ -1,5 +1,6 @@
 package io.vertx.conduit.handlers;
 
+import io.vertx.conduit.entities.User;
 import io.vertx.conduit.services.ArticleService;
 import io.vertx.conduit.services.CommentService;
 import io.vertx.conduit.services.MorphiaService;
@@ -108,5 +109,21 @@ public class ConduitHandler extends BaseHandler {
                         event.fail(ex);
                     }
                 });
+    }
+
+    protected void setCreateFields(RoutingContext event, JsonObject jsonObject) {
+        jsonObject.put("createTime", System.currentTimeMillis());
+        User user = event.get(USER);
+        if (user != null) {
+            jsonObject.put("createUser", user.getUsername());
+        }
+    }
+
+    protected void setUpdateFields(RoutingContext event, JsonObject jsonObject) {
+        jsonObject.put("updateTime", System.currentTimeMillis());
+        User user = event.get(USER);
+        if (user != null) {
+            jsonObject.put("updateUser", user.getUsername());
+        }
     }
 }
