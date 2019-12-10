@@ -75,7 +75,7 @@ public final class HandlerProcessor {
                             try {
                                 return clazz.getMethod(s, RoutingContext.class);
                             } catch (NoSuchMethodException e) {
-                                throw new IllegalArgumentException("Middleware method not properly defined. Must take RoutingContext as argument");
+                                throw new IllegalArgumentException("Middleware method not properly defined. Must take RoutingContext as argument " + clazz.getName() + "#" + s);
                             }
                         })
                         .collect(Collectors.toList());

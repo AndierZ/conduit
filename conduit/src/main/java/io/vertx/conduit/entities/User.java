@@ -10,6 +10,7 @@ import javax.validation.constraints.Pattern;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @Entity("users")
@@ -140,6 +141,10 @@ public class User extends Base {
 
     public boolean isFollowing(User user) {
         return this.following.contains(user);
+    }
+
+    public List<User> getFollowingUsers() {
+        return Collections.unmodifiableList(this.following);
     }
 
     public List<String> getFavorites() {

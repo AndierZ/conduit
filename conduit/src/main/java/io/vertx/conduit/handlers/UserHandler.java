@@ -12,25 +12,17 @@ import io.vertx.ext.auth.jwt.JWTOptions;
 import io.vertx.ext.web.RoutingContext;
 import io.vertx.serviceproxy.ServiceProxyBuilder;
 import org.springframework.security.crypto.bcrypt.BCrypt;
-import routerutils.BaseHandler;
-import routerutils.Middleware;
 import routerutils.RouteConfig;
 
 @RouteConfig(path="/api", produces = "application/json")
-public class UserHandler extends BaseHandler {
+public class UserHandler extends ConduitHandler {
 
-    public final static String TOKEN =  "Bearer";
-    public final static String USER = "user";
-
-    private final io.vertx.conduit.services.reactivex.UserService userService;
     private final JWTAuth jwtAuth;
 
     public UserHandler(Vertx vertx, JWTAuth jwtAuth) {
         super(vertx);
         ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(UserService.ADDRESS);
         this.jwtAuth = jwtAuth;
-        UserService delegate = builder.build(UserService.class);
-        userService = new io.vertx.conduit.services.reactivex.UserService(delegate);
     }
 
     private void appendJwt(JsonObject user, String id) {
@@ -93,20 +85,6 @@ public class UserHandler extends BaseHandler {
                 .subscribe(res -> handleResponse(event, res.toAuthJson(), HttpResponseStatus.OK), e -> handleError(event, e));
     }
 
-    @Middleware
-    public void extractProfile(RoutingContext event) {
-        String username = event.request().getParam("username");
-        userService.rxGet(new JsonObject().put("username", username))
-                .subscribe((user, ex) -> {
-                    if (ex == null) {
-                        event.put("profile", user);
-                        event.next();
-                    } else {
-                        event.fail(ex);
-                    }
-                });
-    }
-
     @RouteConfig(path="/profiles/:username", authRequired = false, middlewares = "extractProfile")
     public void getProfile(RoutingContext event) {
 
@@ -124,24 +102,11 @@ public class UserHandler extends BaseHandler {
         }
     }
 
-    @Middleware
-    public void extractUser(RoutingContext event) {
-        userService.rxGetById(event.get("userId"))
-                .subscribe((user, ex) -> {
-                    if (ex == null) {
-                        event.put(UserHandler.USER, user);
-                        event.next();
-                    } else {
-                        event.fail(ex);
-                    }
-                });
-    }
-
     @RouteConfig(path="/profiles/:username/follow", method = HttpMethod.POST, middlewares = {"extractProfile", "extractUser"})
     public void follow(RoutingContext event) {
 
         User profileUser = event.get("profile");
-        User queryingUser = event.get(UserHandler.USER);
+        User queryingUser = event.get(ConduitHandler.USER);
 
         queryingUser.follow(profileUser);
 
@@ -156,7 +121,7 @@ public class UserHandler extends BaseHandler {
     public void unfollow(RoutingContext event) {
 
         User profileUser = event.get("profile");
-        User queryingUser = event.get(UserHandler.USER);
+        User queryingUser = event.get(ConduitHandler.USER);
 
         queryingUser.unfollow(profileUser);
         JsonObject update = new JsonObject().put("following", new JsonObject().put("$pop", new JsonObject().put("_id", profileUser.getId().toHexString())));

@@ -37,17 +37,19 @@
 33. Done - User unit tests
 34. Done - Article unit tests
 35. Comment unit tests
-
-Query unit tests
+36. Query unit tests
+37. Put all middleware in a shared base class
 
 cleanup string constants
-Put all middleware in a shared base class
 add custom jwt handler to expect "token" instead of "bearer"
+populate base fields (in the GUI or at the very end, i.e. db side?)
 
-After back from vacation:
+What I don't like about Vert.x + rxJava2 + Morphia
+
+next steps:
+    New project using kotlin
     Use long for entity id
-    Add postgres service to replace mongodb
-    populate base fields (in the GUI or at the very end, i.e. db side?)
+    Use postgres service to replace mongodb
     security review
     Dockerize each verticle and deploy to AWS
     look into using protobuf as customized codec for service proxy

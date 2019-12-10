@@ -1,13 +1,12 @@
 package routes;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.conduit.handlers.ArticleHandler;
+import io.vertx.conduit.handlers.ConduitHandler;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
 import io.vertx.ext.unit.junit.VertxUnitRunner;
-import org.bson.types.ObjectId;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -21,31 +20,7 @@ public class ArticleTest extends TestBase {
         registerUser(tc, user1);
         loginUser(tc, user1);
 
-        Async createArticle = tc.async();
-
-        // Must include the forward slash at the end
-
-        webClient.post(PORT, "localhost", "/api/articles/")
-                .putHeader(CONTENT_TYPE, JSON)
-                .putHeader(AUTHORIZATION, getJwt(tc))
-                .sendJsonObject(new JsonObject()
-                        .put(ArticleHandler.ARTICLE, testArticle1.toJson()
-                        ), ar -> {
-                    if (ar.succeeded()) {
-                        tc.assertEquals(HttpResponseStatus.CREATED.code(), ar.result().statusCode());
-                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.ARTICLE);
-                        tc.assertNotNull(json);
-                        JsonObject expected = testArticle1.toJsonFor(user1);
-                        expected.put("_id", json.getString("_id"));
-                        tc.assertEquals(expected, json);
-                        testArticle1.setId(new ObjectId(json.getString("_id")));
-                        createArticle.complete();
-                    } else {
-                        tc.fail();
-                    }
-                });
-
-        createArticle.awaitSuccess();
+        createArticle(tc, testArticle1);
 
         Async updateArticle = tc.async();
 
@@ -55,11 +30,11 @@ public class ArticleTest extends TestBase {
                 .putHeader(CONTENT_TYPE, JSON)
                 .putHeader(AUTHORIZATION, getJwt(tc))
                 .sendJsonObject(new JsonObject()
-                        .put(ArticleHandler.ARTICLE, new JsonObject().put("body", "updatedBody")
+                        .put(ConduitHandler.ARTICLE, new JsonObject().put("body", "updatedBody")
                         ), ar -> {
                     if (ar.succeeded()) {
                         tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
-                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.ARTICLE);
+                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ConduitHandler.ARTICLE);
                         tc.assertNotNull(json);
                         JsonObject expected = testArticle1.toJsonFor(user1);
                         expected.put("_id", json.getString("_id"));
@@ -82,7 +57,7 @@ public class ArticleTest extends TestBase {
                 .send(ar -> {
                     if (ar.succeeded()) {
                         tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
-                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.ARTICLE);
+                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ConduitHandler.ARTICLE);
                         tc.assertNotNull(json);
                         JsonObject expected = testArticle1.toJsonFor(user1);
                         expected.put("_id", json.getString("_id"));
@@ -107,7 +82,7 @@ public class ArticleTest extends TestBase {
                 .send(ar -> {
                     if (ar.succeeded()) {
                         tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
-                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.ARTICLE);
+                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ConduitHandler.ARTICLE);
                         tc.assertNotNull(json);
                         JsonObject expected = testArticle1.toJsonFor(user1);
                         expected.put("_id", json.getString("_id"));
@@ -133,7 +108,7 @@ public class ArticleTest extends TestBase {
                     ar -> {
                     if (ar.succeeded()) {
                         tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
-                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ArticleHandler.COMMENT);
+                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ConduitHandler.COMMENT);
                         tc.assertNotNull(json);
                         tc.put("commentId", json.getString("_id"));
                         tc.assertEquals(testArticle1.getId().toHexString(), json.getString("article"));

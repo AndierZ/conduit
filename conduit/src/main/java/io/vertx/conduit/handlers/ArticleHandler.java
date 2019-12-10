@@ -2,110 +2,33 @@ package io.vertx.conduit.handlers;
 
 import com.github.slugify.Slugify;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.reactivex.Observable;
 import io.vertx.conduit.entities.Article;
 import io.vertx.conduit.entities.Comment;
 import io.vertx.conduit.entities.User;
-import io.vertx.conduit.services.ArticleService;
-import io.vertx.conduit.services.CommentService;
-import io.vertx.conduit.services.UserService;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.web.RoutingContext;
-import io.vertx.serviceproxy.ServiceProxyBuilder;
-import javafx.util.Pair;
-import routerutils.BaseHandler;
-import routerutils.Middleware;
 import routerutils.RouteConfig;
 
 import java.util.Objects;
 
 @RouteConfig(path="/api/articles", produces = "application/json")
-public class ArticleHandler extends BaseHandler {
+public class ArticleHandler extends ConduitHandler {
 
-    public static final String ARTICLE = "article";
-    public static final String COMMENT = "comment";
-
-    private final io.vertx.conduit.services.reactivex.ArticleService articleService;
-    private final io.vertx.conduit.services.reactivex.UserService userService;
-    private final io.vertx.conduit.services.reactivex.CommentService commentService;
     private final Slugify slugify;
 
     public ArticleHandler(Vertx vertx) {
         super(vertx);
-        {
-            ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(ArticleService.ADDRESS);
-            ArticleService delegate = builder.build(ArticleService.class);
-            this.articleService = new io.vertx.conduit.services.reactivex.ArticleService(delegate);
-        }
-
-        {
-            ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(UserService.ADDRESS);
-            UserService delegate = builder.build(UserService.class);
-            this.userService = new io.vertx.conduit.services.reactivex.UserService(delegate);
-        }
-
-        {
-            ServiceProxyBuilder builder = new ServiceProxyBuilder(vertx).setAddress(CommentService.ADDRESS);
-            CommentService delegate = builder.build(CommentService.class);
-            this.commentService = new io.vertx.conduit.services.reactivex.CommentService(delegate);
-        }
-
         this.slugify = new Slugify();
-    }
-
-    @Middleware
-    public void extractArticle(RoutingContext event) {
-        String slug = event.request().getParam(ARTICLE);
-        if (slug != null) {
-            articleService.rxGet(slug)
-                    .subscribe((article, ex) -> {
-                        if (ex == null) {
-                            event.put(ARTICLE, article);
-                            event.next();
-                        } else {
-                            event.fail(ex);
-                        }
-                    });
-        } else {
-            event.next();
-        }
-    }
-
-    @Middleware
-    public void extractUser(RoutingContext event) {
-        userService.rxGetById(event.get("userId"))
-                   .subscribe((user, ex) -> {
-                       if (ex == null) {
-                           event.put(UserHandler.USER, user);
-                           event.next();
-                       } else {
-                           event.fail(ex);
-                       }
-                   });
-    }
-
-    @Middleware
-    public void extractComment(RoutingContext event) {
-        String commentId = event.request().getParam(COMMENT);
-        commentService.rxGet(commentId)
-                .subscribe((comment, ex) -> {
-                    if (ex == null) {
-                        event.put(COMMENT, comment);
-                        event.next();
-                    } else {
-                        event.fail(ex);
-                    }
-                });
     }
 
     @RouteConfig(path="/", method= HttpMethod.POST, middlewares = "extractUser")
     public void create(RoutingContext event) {
         JsonObject message = event.getBodyAsJson().getJsonObject(ARTICLE);
-        User user = event.get(UserHandler.USER);
+        User user = event.get(ConduitHandler.USER);
         message.put("slug", slugify.slugify(message.getString("title")));
         message.put("author", user.toJson());
 
@@ -120,14 +43,14 @@ public class ArticleHandler extends BaseHandler {
         Article article = event.get(ARTICLE);
         event.response()
                 .setStatusCode(HttpResponseStatus.OK.code())
-                .end(Json.encodePrettily(new JsonObject().put(ARTICLE, article.toJsonFor(event.get(UserHandler.USER)))));
+                .end(Json.encodePrettily(new JsonObject().put(ARTICLE, article.toJsonFor(event.get(ConduitHandler.USER)))));
 
     }
 
     @RouteConfig(path="/:article", method=HttpMethod.POST, middlewares = {"extractArticle", "extractUser"})
     public void update(RoutingContext event){
         Article article = event.get(ARTICLE);
-        User user = event.get(UserHandler.USER);
+        User user = event.get(ConduitHandler.USER);
 
         if (!Objects.equals(user.getId(), article.getAuthor().getId())) {
             event.fail(new RuntimeException("Invalid User"));
@@ -153,7 +76,7 @@ public class ArticleHandler extends BaseHandler {
     @RouteConfig(path="/:article/favorite", method=HttpMethod.POST, middlewares = {"extractArticle", "extractUser"})
     public void favorite(RoutingContext event) {
         Article article = event.get(ARTICLE);
-        User user = event.get(UserHandler.USER);
+        User user = event.get(ConduitHandler.USER);
         if (!user.isFavorite(article.getSlug())) {
             user.addFavorite(article.getSlug());
         } else {
@@ -177,7 +100,7 @@ public class ArticleHandler extends BaseHandler {
     @RouteConfig(path="/:article/favorite", method=HttpMethod.DELETE, middlewares = {"extractArticle", "extractUser"})
     public void unfavorite(RoutingContext event) {
         Article article = event.get(ARTICLE);
-        User user = event.get(UserHandler.USER);
+        User user = event.get(ConduitHandler.USER);
         if (user.isFavorite(article.getSlug())) {
             user.removeFavorite(article.getSlug());
         } else {
@@ -202,7 +125,7 @@ public class ArticleHandler extends BaseHandler {
 
     @RouteConfig(path="/:article/comments", method= HttpMethod.POST, middlewares = {"extractUser", "extractArticle"})
     public void createComment(RoutingContext event) {
-        User user = event.get(UserHandler.USER);
+        User user = event.get(ConduitHandler.USER);
         Article article = event.get(ARTICLE);
 
         JsonObject message = event.getBodyAsJson().getJsonObject(COMMENT);
@@ -222,7 +145,7 @@ public class ArticleHandler extends BaseHandler {
 
     @RouteConfig(path="/:article/comments", method= HttpMethod.GET, middlewares = {"extractUser", "extractArticle"})
     public void getComments(RoutingContext event) {
-        User user = event.get(UserHandler.USER);
+        User user = event.get(ConduitHandler.USER);
         Article article = event.get(ARTICLE);
 
         JsonObject comments = new JsonObject();
@@ -239,7 +162,7 @@ public class ArticleHandler extends BaseHandler {
 
     @RouteConfig(path="/:article/comments/:comment", method= HttpMethod.DELETE, middlewares = {"extractUser", "extractComment", "extractArticle"})
     public void deleteComment(RoutingContext event) {
-        User user = event.get(UserHandler.USER);
+        User user = event.get(ConduitHandler.USER);
         Article article = event.get(ARTICLE);
         Comment comment = event.get(COMMENT);
 

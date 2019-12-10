@@ -122,7 +122,7 @@ public class MorphiaServiceImpl implements MorphiaService {
     @Override
     public void queryTags(Handler<AsyncResult<List<String>>> resultHandler) {
         vertx.executeBlocking(future -> {
-            future.complete(datastore.getCollection(Article.class).distinct("TagList"));
+            future.complete(datastore.getCollection(Article.class).distinct("tagsList"));
         }, res -> {
             if (res.succeeded()) {
                 resultHandler.handle(Future.succeededFuture((List<String>)res.result()));
@@ -143,19 +143,21 @@ public class MorphiaServiceImpl implements MorphiaService {
             query.order(Sort.descending("createTime"));
 
             if (json.getString("author") != null) {
-                query.field("author.$username").equal(new ObjectId(json.getString("author")));
+                Query<User> userQuery = datastore.createQuery(User.class);
+                userQuery.field("username").equal(json.getString("author"));
+                User author = userQuery.first();
+                query.field("author").equal(author);
             }
 
             if (json.getString("favoriter") != null) {
                 Query<User> userQuery = datastore.createQuery(User.class);
-                query.field("username").equal(new ObjectId(json.getString("favoriter")));
+                userQuery.field("username").equal(json.getString("favoriter"));
                 User favoriter = userQuery.first();
-
                 query.field("slug").in(favoriter.getFavorites());
             }
 
             if (json.getJsonArray("tags") != null) {
-                List<Criteria> criteria = json.getJsonArray("tags").stream().map(tag -> query.criteria("tagList").in(json.getJsonArray("tags"))).collect(Collectors.toList());
+                List<Criteria> criteria = json.getJsonArray("tags").stream().map(tag -> query.criteria("tagsList").in(json.getJsonArray("tags"))).collect(Collectors.toList());
                 query.or(criteria.toArray(new Criteria[0]));
             }
 
@@ -166,7 +168,7 @@ public class MorphiaServiceImpl implements MorphiaService {
 
             JsonObject res = new JsonObject();
 
-            res.put("articlesCount", count);
+            res.put("count", count);
             res.put("articles", array);
 
             future.complete(res);
@@ -192,10 +194,9 @@ public class MorphiaServiceImpl implements MorphiaService {
 
             if (json.getString("queryingUser") != null) {
                 Query<User> userQuery = datastore.createQuery(User.class);
-                query.field("username").equal(new ObjectId(json.getString("queryingUser")));
+                userQuery.field("username").equal(json.getString("queryingUser"));
                 User queryingUser = userQuery.first();
-
-                query.field("author").in(queryingUser.getFavorites());
+                query.field("author").in(queryingUser.getFollowingUsers());
             }
 
             long count = query.count();
@@ -205,7 +206,7 @@ public class MorphiaServiceImpl implements MorphiaService {
 
             JsonObject res = new JsonObject();
 
-            res.put("articlesCount", count);
+            res.put("count", count);
             res.put("articles", array);
 
             future.complete(res);
