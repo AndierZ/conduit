@@ -29,7 +29,7 @@ public class UserHandler extends ConduitHandler {
         JsonObject principal = new JsonObject();
         principal.put("_id", id);
         principal.put("username", user.getString("username"));
-        user.put(Constants.TOKEN, jwtAuth.generateToken(principal, new JWTOptions().setExpiresInMinutes(120)));
+        user.put(Constants.AUTH_HEADER, jwtAuth.generateToken(principal, new JWTOptions().setExpiresInMinutes(120)));
     }
 
     @RouteConfig(path="/users/login", method=HttpMethod.POST, authRequired=false)

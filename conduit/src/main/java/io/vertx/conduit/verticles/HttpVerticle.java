@@ -1,13 +1,9 @@
 package io.vertx.conduit.verticles;
 
-import io.vertx.conduit.handlers.ArticleHandler;
-import io.vertx.conduit.handlers.JwtOptionalHandler;
-import io.vertx.conduit.handlers.QueryHandler;
+import io.vertx.conduit.handlers.*;
 import io.vertx.core.Promise;
 import logging.ContextLogger;
-import io.vertx.conduit.handlers.UserHandler;
 import io.vertx.core.AbstractVerticle;
-import io.vertx.core.Future;
 import io.vertx.core.json.JsonObject;
 import io.vertx.core.logging.Logger;
 import io.vertx.ext.auth.PubSecKeyOptions;
@@ -15,7 +11,6 @@ import io.vertx.ext.auth.jwt.JWTAuth;
 import io.vertx.ext.auth.jwt.JWTAuthOptions;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.handler.BodyHandler;
-import io.vertx.ext.web.handler.JWTAuthHandler;
 import routerutils.RouteBuilder;
 
 public class HttpVerticle extends AbstractVerticle {
@@ -40,7 +35,7 @@ public class HttpVerticle extends AbstractVerticle {
         Router baseRouter = Router.router(vertx);
 
         new RouteBuilder(baseRouter)
-                .addAuthHandler(JWTAuthHandler.create(jwtAuth))
+                .addAuthHandler(new ConduitJwtAuthHandlerImpl(jwtAuth, Constants.AUTH_HEADER)) // To expect the header value defined by the Conduit api "token". Otherwise could just use JWTAuthHandler.create(jwtAuth)
                 .addPreHandler(BodyHandler.create())
                 .addPreHandler(new JwtOptionalHandler(jwtAuthOptions))
                 .add(new UserHandler(vertx, jwtAuth))

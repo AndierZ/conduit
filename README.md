@@ -40,9 +40,8 @@
 36. Query unit tests
 37. Put all middleware in a shared base class
 38. populate base fields (in the GUI or at the very end, i.e. db side?)
-
-cleanup string constants
-add custom jwt handler to expect "token" instead of "bearer"
+39. cleanup string constants
+40. add custom jwt handler to expect "token" instead of "bearer"
 
 What I don't like about Vert.x + rxJava2 + Morphia
     Really don't like how ObjectId works and the fact that it can be null

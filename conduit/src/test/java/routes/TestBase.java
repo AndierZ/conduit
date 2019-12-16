@@ -169,8 +169,8 @@ public class TestBase {
                             if (ar.succeeded()) {
                                 tc.assertEquals(HttpResponseStatus.CREATED.code(), ar.result().statusCode());
                                 JsonObject returnedUser = ar.result().bodyAsJsonObject();
-                                tc.assertNotNull(returnedUser.getString(Constants.TOKEN));
-                                tc.put("jwt", returnedUser.getString(Constants.TOKEN));
+                                tc.assertNotNull(returnedUser.getString(Constants.AUTH_HEADER));
+                                tc.put("jwt", returnedUser.getString(Constants.AUTH_HEADER));
                                 login.complete();
                             } else {
                                 tc.fail(ar.cause());
@@ -212,7 +212,7 @@ public class TestBase {
 
 
     protected static String getJwt(TestContext tc) {
-        return Constants.TOKEN + " " + tc.get("jwt").toString();
+        return Constants.AUTH_HEADER + " " + tc.get("jwt").toString();
     }
 
     @Test
