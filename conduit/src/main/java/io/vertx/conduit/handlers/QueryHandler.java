@@ -50,7 +50,7 @@ public class QueryHandler extends ConduitHandler {
 
     @RouteConfig(path="/feed", method = HttpMethod.GET, middlewares = "extractUser")
     public void queryArticlesForFollower(RoutingContext event) {
-        User queryingUser = event.get(ConduitHandler.USER);
+        User queryingUser = event.get(Constants.USER);
         JsonObject query = event.getBodyAsJson().getJsonObject(QUERY);
         query.put("queryingUser", queryingUser.getUsername());
 

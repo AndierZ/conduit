@@ -1,7 +1,7 @@
 package routes;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
-import io.vertx.conduit.handlers.ConduitHandler;
+import io.vertx.conduit.handlers.Constants;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
 import io.vertx.ext.unit.TestContext;
@@ -24,7 +24,7 @@ public class UserTest extends TestBase {
         webClient.post(PORT, "localhost", "/api/users")
                 .putHeader(CONTENT_TYPE, JSON)
                 .sendJsonObject(new JsonObject()
-                        .put(ConduitHandler.USER, user1.toJson()
+                        .put(Constants.USER, user1.toJson()
                         ), ar -> {
                     if (ar.succeeded()) {
                         String body = ar.result().bodyAsString();
@@ -49,7 +49,7 @@ public class UserTest extends TestBase {
         webClient.post(PORT, "localhost", "/api/user")
                 .putHeader(CONTENT_TYPE, JSON)
                 .putHeader(AUTHORIZATION, getJwt(tc))
-                .sendJsonObject(new JsonObject().put(ConduitHandler.USER, new JsonObject()
+                .sendJsonObject(new JsonObject().put(Constants.USER, new JsonObject()
                         .put("bio", "updatedBio")),
                         ar -> {
                     if (ar.succeeded()) {

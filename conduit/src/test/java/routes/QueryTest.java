@@ -2,7 +2,7 @@ package routes;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.codegen.annotations.Nullable;
-import io.vertx.conduit.handlers.ConduitHandler;
+import io.vertx.conduit.handlers.Constants;
 import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.unit.Async;
@@ -35,7 +35,7 @@ public class QueryTest extends TestBase {
                 .send(ar -> {
                     if (ar.succeeded()) {
                         tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
-                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ConduitHandler.ARTICLE);
+                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(Constants.ARTICLE);
                         tc.assertNotNull(json);
                         JsonObject expected = testArticle1.toJsonFor(user2);
                         expected.put("_id", json.getString("_id"));

@@ -4,7 +4,7 @@ package routes;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.conduit.entities.Article;
 import io.vertx.conduit.entities.User;
-import io.vertx.conduit.handlers.ConduitHandler;
+import io.vertx.conduit.handlers.Constants;
 import io.vertx.conduit.services.ArticleService;
 import io.vertx.conduit.services.CommentService;
 import io.vertx.conduit.services.UserService;
@@ -138,7 +138,7 @@ public class TestBase {
         webClient.post(PORT, "localhost", "/api/users")
                 .putHeader(CONTENT_TYPE, JSON)
                 .sendJsonObject(new JsonObject()
-                        .put(ConduitHandler.USER, user.toJson()
+                        .put(Constants.USER, user.toJson()
                         ), ar -> {
                     if (ar.succeeded()) {
                         tc.assertEquals(HttpResponseStatus.CREATED.code(), ar.result().statusCode());
@@ -162,15 +162,15 @@ public class TestBase {
 
         webClient.post(PORT, "localhost", "/api/users/login")
                 .putHeader(CONTENT_TYPE, JSON)
-                .sendJsonObject(new JsonObject().put(ConduitHandler.USER, new JsonObject()
+                .sendJsonObject(new JsonObject().put(Constants.USER, new JsonObject()
                                 .put("email", user.getEmail())
                                 .put("password", user.getPassword())),
                         ar -> {
                             if (ar.succeeded()) {
                                 tc.assertEquals(HttpResponseStatus.CREATED.code(), ar.result().statusCode());
                                 JsonObject returnedUser = ar.result().bodyAsJsonObject();
-                                tc.assertNotNull(returnedUser.getString(ConduitHandler.TOKEN));
-                                tc.put("jwt", returnedUser.getString(ConduitHandler.TOKEN));
+                                tc.assertNotNull(returnedUser.getString(Constants.TOKEN));
+                                tc.put("jwt", returnedUser.getString(Constants.TOKEN));
                                 login.complete();
                             } else {
                                 tc.fail(ar.cause());
@@ -189,11 +189,11 @@ public class TestBase {
                 .putHeader(CONTENT_TYPE, JSON)
                 .putHeader(AUTHORIZATION, getJwt(tc))
                 .sendJsonObject(new JsonObject()
-                        .put(ConduitHandler.ARTICLE, article.toJson()
+                        .put(Constants.ARTICLE, article.toJson()
                         ), ar -> {
                     if (ar.succeeded()) {
                         tc.assertEquals(HttpResponseStatus.CREATED.code(), ar.result().statusCode());
-                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(ConduitHandler.ARTICLE);
+                        JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(Constants.ARTICLE);
                         tc.assertNotNull(json);
                         JsonObject expected = article.toJsonFor(user1);
                         expected.put("_id", json.getString("_id"));
@@ -212,7 +212,7 @@ public class TestBase {
 
 
     protected static String getJwt(TestContext tc) {
-        return ConduitHandler.TOKEN + " " + tc.get("jwt").toString();
+        return Constants.TOKEN + " " + tc.get("jwt").toString();
     }
 
     @Test

@@ -12,6 +12,8 @@ import io.vertx.ext.web.RoutingContext;
 
 import java.util.List;
 
+import static io.vertx.conduit.handlers.Constants.USER_ID;
+
 public class JwtOptionalHandler implements Handler<RoutingContext> {
 
     private final JWT jwt;
@@ -48,9 +50,9 @@ public class JwtOptionalHandler implements Handler<RoutingContext> {
         }
 
         if (event.user() != null && event.user().principal() != null) {
-            event.put("userId", event.user().principal().getString("_id"));
+            event.put(USER_ID, event.user().principal().getString("_id"));
         } else {
-            event.put("userId", null);
+            event.put(USER_ID, null);
         }
 
         event.next();

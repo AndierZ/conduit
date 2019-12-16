@@ -13,10 +13,6 @@ import routerutils.BaseHandler;
 import routerutils.Middleware;
 
 public class ConduitHandler extends BaseHandler {
-    public static final String ARTICLE = "article";
-    public static final String COMMENT = "comment";
-    public static final String TOKEN =  "Bearer";
-    public static final String USER = "user";
 
     protected final io.vertx.conduit.services.reactivex.ArticleService articleService;
     protected final io.vertx.conduit.services.reactivex.UserService userService;
@@ -54,10 +50,10 @@ public class ConduitHandler extends BaseHandler {
 
     @Middleware
     public void extractUser(RoutingContext event) {
-        userService.rxGetById(event.get("userId"))
+        userService.rxGetById(event.get(Constants.USER_ID))
                 .subscribe((user, ex) -> {
                     if (ex == null) {
-                        event.put(USER, user);
+                        event.put(Constants.USER, user);
                         event.next();
                     } else {
                         event.fail(ex);
@@ -81,12 +77,12 @@ public class ConduitHandler extends BaseHandler {
 
     @Middleware
     public void extractArticle(RoutingContext event) {
-        String slug = event.request().getParam(ARTICLE);
+        String slug = event.request().getParam(Constants.ARTICLE);
         if (slug != null) {
             articleService.rxGet(slug)
                     .subscribe((article, ex) -> {
                         if (ex == null) {
-                            event.put(ARTICLE, article);
+                            event.put(Constants.ARTICLE, article);
                             event.next();
                         } else {
                             event.fail(ex);
@@ -99,11 +95,11 @@ public class ConduitHandler extends BaseHandler {
 
     @Middleware
     public void extractComment(RoutingContext event) {
-        String commentId = event.request().getParam(COMMENT);
+        String commentId = event.request().getParam(Constants.COMMENT);
         commentService.rxGet(commentId)
                 .subscribe((comment, ex) -> {
                     if (ex == null) {
-                        event.put(COMMENT, comment);
+                        event.put(Constants.COMMENT, comment);
                         event.next();
                     } else {
                         event.fail(ex);
@@ -113,7 +109,7 @@ public class ConduitHandler extends BaseHandler {
 
     protected void setCreateFields(RoutingContext event, JsonObject jsonObject) {
         jsonObject.put("createTime", System.currentTimeMillis());
-        User user = event.get(USER);
+        User user = event.get(Constants.USER);
         if (user != null) {
             jsonObject.put("createUser", user.getUsername());
         }
@@ -121,7 +117,7 @@ public class ConduitHandler extends BaseHandler {
 
     protected void setUpdateFields(RoutingContext event, JsonObject jsonObject) {
         jsonObject.put("updateTime", System.currentTimeMillis());
-        User user = event.get(USER);
+        User user = event.get(Constants.USER);
         if (user != null) {
             jsonObject.put("updateUser", user.getUsername());
         }
