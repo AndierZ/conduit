@@ -27,9 +27,9 @@ public class UserHandler extends ConduitHandler {
 
     private void appendJwt(JsonObject user, String id) {
         JsonObject principal = new JsonObject();
-        principal.put("_id", id);
+        principal.put("id", id);
         principal.put("username", user.getString("username"));
-        user.put(Constants.AUTH_HEADER, jwtAuth.generateToken(principal, new JWTOptions().setExpiresInMinutes(120)));
+        user.put(Constants.AUTH_KEY, jwtAuth.generateToken(principal, new JWTOptions().setExpiresInMinutes(120)));
     }
 
     @RouteConfig(path="/users/login", method=HttpMethod.POST, authRequired=false)
@@ -43,11 +43,10 @@ public class UserHandler extends ConduitHandler {
                         } else {
                             String hashed = res.getPassword();
                             if (BCrypt.checkpw(message.getString("password"), hashed)) {
-                                JsonObject userAuthJson = res.toAuthJson();
-                                appendJwt(userAuthJson, res.getId().toHexString());
+                                JsonObject authJson = createAuthJson(res);
                                 event.response()
                                         .setStatusCode(HttpResponseStatus.CREATED.code())
-                                        .end(Json.encodePrettily(userAuthJson));
+                                        .end(Json.encodePrettily(authJson));
                             } else {
                                 event.fail(new RuntimeException("Invalid user credentials"));
                             }
@@ -64,44 +63,46 @@ public class UserHandler extends ConduitHandler {
         return BCrypt.hashpw(password, salt);
     }
 
+    private JsonObject createAuthJson(User user) {
+        if (user.getId() != null) {
+            JsonObject authJson = user.toAuthJson();
+            appendJwt(authJson, user.getId().toHexString());
+            return new JsonObject().put("user", authJson);
+        }
+        return new JsonObject();
+    }
+
     @RouteConfig(path="/users", method=HttpMethod.POST, authRequired=false)
     public void register(RoutingContext event) {
         JsonObject message = event.getBodyAsJson().getJsonObject(Constants.USER);
         setCreateFields(event, message);
         message.put("password", setPassword(message.getString("password")));
         userService.rxCreate(message)
-                .subscribe(res -> handleResponse(event, res.toAuthJson(), HttpResponseStatus.CREATED), e -> handleError(event, e));
+                .subscribe(res -> handleResponse(event, createAuthJson(res), HttpResponseStatus.CREATED), e -> handleError(event, e));
     }
 
-    @RouteConfig(path="/user", method = HttpMethod.POST)
+
+
+    @RouteConfig(path="/user", method = HttpMethod.PUT)
     public void put(RoutingContext event) {
         JsonObject message = event.getBodyAsJson().getJsonObject(Constants.USER);
         setUpdateFields(event, message);
         userService.rxUpdate(event.get(Constants.USER_ID), message)
-                .subscribe(res -> handleResponse(event, res.toAuthJson(), HttpResponseStatus.OK), e -> handleError(event, e));
+                .subscribe(res -> handleResponse(event, createAuthJson(res), HttpResponseStatus.OK), e -> handleError(event, e));
     }
 
     @RouteConfig(path="/user")
     public void get(RoutingContext event) {
         userService.rxGetById(event.get(Constants.USER_ID))
-                .subscribe(res -> handleResponse(event, res.toAuthJson(), HttpResponseStatus.OK), e -> handleError(event, e));
+                .subscribe(res -> handleResponse(event, createAuthJson(res), HttpResponseStatus.OK), e -> handleError(event, e));
     }
 
-    @RouteConfig(path="/profiles/:username", authRequired = false, middlewares = "extractProfile")
+    @RouteConfig(path="/profiles/:username", authRequired = false, middlewares = {"extractProfile", "extractUser"})
     public void getProfile(RoutingContext event) {
-
         User profile = event.get("profile");
-        String queryingUserId = event.get(Constants.USER_ID);
-        if (queryingUserId != null) {
-
-            userService.rxGetById(queryingUserId)
-                       .map(queryingUser -> new JsonObject().put("profile", profile.toProfileJsonFor(queryingUser)))
-                       .subscribe(res -> handleResponse(event, res, HttpResponseStatus.OK), e -> handleError(event, e));
-
-        } else {
-            JsonObject json = new JsonObject().put("profile" ,profile.toProfileJsonFor(null));
-            handleResponse(event, json, HttpResponseStatus.OK);
-        }
+        User queryingUser = event.get(Constants.USER);
+        JsonObject json = new JsonObject().put("profile" ,profile.toProfileJsonFor(queryingUser));
+        handleResponse(event, json, HttpResponseStatus.OK);
     }
 
     @RouteConfig(path="/profiles/:username/follow", method = HttpMethod.POST, middlewares = {"extractProfile", "extractUser"})

@@ -2,10 +2,12 @@ package io.vertx.conduit.entities;
 
 import dev.morphia.annotations.*;
 import io.vertx.codegen.annotations.DataObject;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotEmpty;
+import java.util.Date;
 import java.util.List;
 
 @Entity("articles")
@@ -29,7 +31,7 @@ public class Article extends Base {
 
     private String body;
 
-    private List<String> tagsList;
+    private List<String> tagList;
 
     private boolean favorited;
 
@@ -75,12 +77,12 @@ public class Article extends Base {
         this.body = body;
     }
 
-    public List<String> getTagsList() {
-        return tagsList;
+    public List<String> getTagList() {
+        return tagList;
     }
 
-    public void setTagsList(List<String> tagsList) {
-        this.tagsList = tagsList;
+    public void setTagList(List<String> tagList) {
+        this.tagList = tagList;
     }
 
     public boolean isFavorited() {
@@ -109,8 +111,12 @@ public class Article extends Base {
 
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
-        super.toJson(json);
         ArticleConverter.toJson(this, json);
+        super.toJson(json);
+        // To make postman test script happy
+        if (json.getJsonArray("tagList") == null) {
+            json.put("tagList", new JsonArray());
+        }
         return json;
     }
 
@@ -121,8 +127,10 @@ public class Article extends Base {
 
     public JsonObject toJsonFor(User user) {
         JsonObject json = toJson();
+        json.put("createdAt", DF.format(new Date(getCreatedAt())));
+        json.put("updatedAt", DF.format(new Date(getCreatedAt())));
         json.put("author", author.toProfileJsonFor(user));
-        json.put("favorited", user.isFavorite(getSlug()));
+        json.put("favorited", user != null && user.isFavorite(getSlug()));
         return json;
     }
 

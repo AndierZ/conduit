@@ -22,8 +22,8 @@ public class QueryTest extends TestBase {
         registerUser(tc, user2);
         loginUser(tc, user1);
 
-        createArticle(tc, testArticle1);
-        createArticle(tc, testArticle2);
+        createArticle(tc, user1, testArticle1);
+        createArticle(tc, user1, testArticle2);
 
         loginUser(tc, user2);
 
@@ -38,13 +38,13 @@ public class QueryTest extends TestBase {
                         JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(Constants.ARTICLE);
                         tc.assertNotNull(json);
                         JsonObject expected = testArticle1.toJsonFor(user2);
-                        expected.put("_id", json.getString("_id"));
+                        expected.put("id", json.getString("id"));
                         expected.put("version", json.getLong("version"));
                         expected.put("favoritesCount", 1);
                         expected.put("favorited", true);
-                        expected.put("createTime", json.getLong("createTime"));
+                        expected.put("createdAt", json.getString("createdAt"));
                         expected.put("createUser", json.getString("createUser"));
-                        expected.put("updateTime", json.getLong("updateTime"));
+                        expected.put("updatedAt", json.getString("updatedAt"));
                         tc.assertEquals(expected, json);
                         favoriteArticle.complete();
                     } else {
@@ -77,7 +77,7 @@ public class QueryTest extends TestBase {
 
         Async articleQuery = tc.async();
 
-        webClient.get(PORT, "localhost", "/api/")
+        webClient.get(PORT, "localhost", "/api/articles")
                 .putHeader(CONTENT_TYPE, JSON)
                 .putHeader(AUTHORIZATION, getJwt(tc))
                 .sendJsonObject(new JsonObject().put("query", new JsonObject()
@@ -91,13 +91,13 @@ public class QueryTest extends TestBase {
                             if (ar.succeeded()) {
                                 tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
                                 @Nullable JsonObject res = ar.result().bodyAsJsonObject();
-                                int count = res.getInteger("count");
+                                int count = res.getInteger("articlesCount");
                                 tc.assertEquals(1, count);
 
                                 JsonArray articles = res.getJsonArray("articles");
                                 tc.assertEquals(1, articles.size());
 
-                                tc.assertEquals(testArticle1.getId().toHexString(), articles.getJsonObject(0).getString("_id"));
+                                tc.assertEquals(testArticle1.getId().toHexString(), articles.getJsonObject(0).getString("id"));
                                 articleQuery.complete();
                             } else {
                                 tc.fail();
@@ -130,7 +130,7 @@ public class QueryTest extends TestBase {
 
         Async feedQuery = tc.async();
 
-        webClient.get(PORT, "localhost", "/api/feed")
+        webClient.get(PORT, "localhost", "/api/articles/feed")
                 .putHeader(CONTENT_TYPE, JSON)
                 .putHeader(AUTHORIZATION, getJwt(tc))
                 .sendJsonObject(new JsonObject().put("query", new JsonObject()
@@ -144,15 +144,15 @@ public class QueryTest extends TestBase {
                             if (ar.succeeded()) {
                                 tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
                                 @Nullable JsonObject res = ar.result().bodyAsJsonObject();
-                                int count = res.getInteger("count");
+                                int count = res.getInteger("articlesCount");
                                 tc.assertEquals(2, count);
 
                                 JsonArray articles = res.getJsonArray("articles");
                                 tc.assertEquals(2, articles.size());
 
                                 // ordered by create time in descending order
-                                tc.assertEquals(testArticle2.getId().toHexString(), articles.getJsonObject(0).getString("_id"));
-                                tc.assertEquals(testArticle1.getId().toHexString(), articles.getJsonObject(1).getString("_id"));
+                                tc.assertEquals(testArticle2.getId().toHexString(), articles.getJsonObject(0).getString("id"));
+                                tc.assertEquals(testArticle1.getId().toHexString(), articles.getJsonObject(1).getString("id"));
                                 feedQuery.complete();
                             } else {
                                 tc.fail();

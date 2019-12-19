@@ -20,7 +20,7 @@ public class HttpVerticle extends AbstractVerticle {
 
     @Override
     public void start(Promise<Void> startPromise) {
-        LOGGER.info("Starting Http Verticle with config {}", "test");
+        LOGGER.info("Starting Http Verticle");
 
         JsonObject config = config();
 

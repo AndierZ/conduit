@@ -48,9 +48,9 @@ public interface MorphiaService {
 
     void queryTags(Handler<AsyncResult<List<String>>> resultHandler);
 
-    void queryArticles(JsonObject query, Handler<AsyncResult<JsonObject>> resultHandler);
+    void queryArticles(User user, JsonObject query, Handler<AsyncResult<JsonObject>> resultHandler);
 
-    void queryArticlesFeed(JsonObject json, Handler<AsyncResult<JsonObject>> resultHandler);
+    void queryArticlesFeed(User user, JsonObject json, Handler<AsyncResult<JsonObject>> resultHandler);
 
     @ProxyClose
     void close();

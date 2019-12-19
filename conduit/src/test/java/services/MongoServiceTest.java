@@ -54,7 +54,8 @@ public class MongoServiceTest {
         this.mongoDbService.rxInsertOne(USER_COLLETION, user)
                            .map(id -> {
                               LOGGER.info("Creating document");
-                              user.put("_id", id);
+                               user.put("id", user.getString("_id"));
+                               user.remove("_id");
                               User userEntity = new User(user);
                               return userEntity;
                            }).flatMap(userEntity -> {
@@ -62,19 +63,23 @@ public class MongoServiceTest {
                                return this.mongoDbService.rxFindById(USER_COLLETION, userEntity.getId().toHexString(), null);
                            }).flatMap(json -> {
                                LOGGER.info("Updating document");
+                               json.put("id", json.getString("_id"));
+                               json.remove("_id");
                                assertTrue(user.equals(json));
                                JsonObject updateJson = new JsonObject();
                                updateJson.put("email", "3@4.com");
                                user.put("email", "3@4.com");
-                               return this.mongoDbService.rxFindOneAndUpdate(USER_COLLETION, new JsonObject().put("_id", user.getString("_id")), updateJson, new FindOptions(), new UpdateOptions());
+                               return this.mongoDbService.rxFindOneAndUpdate(USER_COLLETION, new JsonObject().put("_id", user.getString("id")), updateJson, new FindOptions(), new UpdateOptions());
                            }).flatMap(json -> {
                                LOGGER.info("Reading updated document");
                                // FIXME why does this return a nested object id?
                                return this.mongoDbService.rxFindById(USER_COLLETION, json.getJsonObject("_id").getString("$oid"), null);
                            }).flatMap(json -> {
+                                json.put("id", json.getString("_id"));
+                                json.remove("_id");
                                 assertTrue(user.equals(json));
                                 LOGGER.info("Deleting document: " + json);
-                                return this.mongoDbService.rxDelete(USER_COLLETION, new JsonObject().put("_id", user.getString("_id")));
+                                return this.mongoDbService.rxDelete(USER_COLLETION, new JsonObject().put("_id", user.getString("id")));
                     }).subscribe((res, e) -> {
                         if (e == null) {
                             async.complete();

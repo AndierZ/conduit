@@ -38,7 +38,7 @@ public class UserTest extends TestBase {
         createDupe.awaitSuccess();
     }
 
-    @Test(timeout = TIMEOUT)
+    @Test(timeout = 120000)
     public void testUpdateUser(TestContext tc) {
         cleanupUser(tc);
         registerUser(tc, user1);
@@ -46,7 +46,7 @@ public class UserTest extends TestBase {
 
         Async update = tc.async();
 
-        webClient.post(PORT, "localhost", "/api/user")
+        webClient.put(PORT, "localhost", "/api/user")
                 .putHeader(CONTENT_TYPE, JSON)
                 .putHeader(AUTHORIZATION, getJwt(tc))
                 .sendJsonObject(new JsonObject().put(Constants.USER, new JsonObject()
@@ -54,7 +54,7 @@ public class UserTest extends TestBase {
                         ar -> {
                     if (ar.succeeded()) {
                         tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
-                        JsonObject returnedUser = ar.result().bodyAsJsonObject();
+                        JsonObject returnedUser = ar.result().bodyAsJsonObject().getJsonObject("user");
                         tc.assertEquals(user1.getUsername(), returnedUser.getString("username"));
                         tc.assertEquals(user1.getEmail(), returnedUser.getString("email"));
                         tc.assertEquals("updatedBio", returnedUser.getString("bio"));
@@ -81,8 +81,10 @@ public class UserTest extends TestBase {
                       ar -> {
                             if (ar.succeeded()) {
                                 tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
-                                JsonObject returnedUser = ar.result().bodyAsJsonObject();
-                                tc.assertEquals(user1.toAuthJson(), returnedUser);
+                                JsonObject returnedUser = ar.result().bodyAsJsonObject().getJsonObject("user");
+                                JsonObject authJson = user1.toAuthJson();
+                                authJson.put("token", tc.get("jwt").toString());
+                                tc.assertEquals(authJson, returnedUser);
                                 get.complete();
                             } else {
                                 tc.fail(ar.cause());

@@ -45,7 +45,7 @@ public class ConduitJwtAuthHandlerImpl extends AuthHandlerImpl {
 
     @Override
     protected String authenticateHeader(RoutingContext context) {
-        return Constants.AUTH_HEADER;
+        return Constants.AUTH_KEY;
     }
 
     @Override

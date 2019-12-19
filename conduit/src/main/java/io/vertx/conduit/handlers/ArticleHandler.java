@@ -15,6 +15,8 @@ import routerutils.RouteConfig;
 
 import java.util.Objects;
 
+import static io.vertx.conduit.handlers.Constants.QUERY;
+
 @RouteConfig(path="/api/articles", produces = "application/json")
 public class ArticleHandler extends ConduitHandler {
 
@@ -25,7 +27,7 @@ public class ArticleHandler extends ConduitHandler {
         this.slugify = new Slugify();
     }
 
-    @RouteConfig(path="/", method= HttpMethod.POST, middlewares = "extractUser")
+    @RouteConfig(path="", method= HttpMethod.POST, middlewares = "extractUser")
     public void create(RoutingContext event) {
         JsonObject message = event.getBodyAsJson().getJsonObject(Constants.ARTICLE);
         setCreateFields(event, message);
@@ -38,6 +40,48 @@ public class ArticleHandler extends ConduitHandler {
                       .subscribe(res -> handleResponse(event, res, HttpResponseStatus.CREATED), e -> handleError(event, e));
     }
 
+    @RouteConfig(path="", method = HttpMethod.GET, authRequired = false, middlewares = "extractUser")
+    public void queryArticles(RoutingContext event) {
+        JsonObject query;
+        JsonObject bodyAsJson = event.getBodyAsJson();
+        if (bodyAsJson != null && bodyAsJson.getJsonObject(QUERY) != null) {
+            query = bodyAsJson.getJsonObject(QUERY);
+        } else {
+            query = new JsonObject();
+        }
+        User queryingUser = event.get(Constants.USER);
+
+        morphiaService.rxQueryArticles(queryingUser, query)
+                .doOnError(e -> event.fail(e))
+                .subscribe(json -> {
+                    event.response()
+                            .setStatusCode(HttpResponseStatus.OK.code())
+                            .end(Json.encodePrettily(json));
+                });
+    }
+
+    //this conflicts with /articles/:article
+    //Put here before specifically to override so /articles/feed/ goes to this method instead of the get method
+    @RouteConfig(path="/feed", method = HttpMethod.GET, middlewares = "extractUser")
+    public void queryArticlesFeed(RoutingContext event) {
+        JsonObject query;
+        JsonObject bodyAsJson = event.getBodyAsJson();
+        if (bodyAsJson != null && bodyAsJson.getJsonObject(QUERY) != null) {
+            query = bodyAsJson.getJsonObject(QUERY);
+        } else {
+            query = new JsonObject();
+        }
+        User queryingUser = event.get(Constants.USER);
+
+        morphiaService.rxQueryArticlesFeed(queryingUser, query)
+                .doOnError(e -> event.fail(e))
+                .subscribe(json -> {
+                    event.response()
+                            .setStatusCode(HttpResponseStatus.OK.code())
+                            .end(Json.encodePrettily(json));
+                });
+    }
+
     @RouteConfig(path="/:article", method=HttpMethod.GET, middlewares = {"extractArticle", "extractUser"})
     public void get(RoutingContext event){
 
@@ -45,10 +89,9 @@ public class ArticleHandler extends ConduitHandler {
         event.response()
                 .setStatusCode(HttpResponseStatus.OK.code())
                 .end(Json.encodePrettily(new JsonObject().put(Constants.ARTICLE, article.toJsonFor(event.get(Constants.USER)))));
-
     }
 
-    @RouteConfig(path="/:article", method=HttpMethod.POST, middlewares = {"extractArticle", "extractUser"})
+    @RouteConfig(path="/:article", method=HttpMethod.PUT, middlewares = {"extractArticle", "extractUser"})
     public void update(RoutingContext event){
         Article article = event.get(Constants.ARTICLE);
         User user = event.get(Constants.USER);
@@ -68,8 +111,16 @@ public class ArticleHandler extends ConduitHandler {
     @RouteConfig(path="/:article", method=HttpMethod.DELETE, middlewares = {"extractArticle", "extractUser"})
     public void delete(RoutingContext event){
         Article article = event.get(Constants.ARTICLE);
-        if (Objects.equals(event.get(Constants.USER_ID), article.getAuthor().getId())) {
-            articleService.rxDelete(article.getSlug());
+        if (article.getAuthor().getId() != null && Objects.equals(event.get(Constants.USER_ID), article.getAuthor().getId().toHexString())) {
+            articleService.rxDelete(article.getSlug()).subscribe((ignored, ex) -> {
+                if (ex == null) {
+                    event.response()
+                            .setStatusCode(HttpResponseStatus.OK.code())
+                            .end();
+                } else {
+                    event.fail(ex);
+                }
+            });
         } else {
             event.fail(new RuntimeException("Invalid user"));
         }

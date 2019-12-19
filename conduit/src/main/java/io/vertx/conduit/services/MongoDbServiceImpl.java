@@ -61,7 +61,7 @@ public class MongoDbServiceImpl implements MongoDbService {
     public void insertOne(final String collection, final JsonObject document, final Handler<AsyncResult<String>> resultHandler) {
         try {
             // make sure _id field doesn't exist to force database create one
-            document.remove("_id");
+            document.remove("id");
             client.rxInsert(collection, document).subscribe(resp -> {
                 resultHandler.handle(Future.succeededFuture(resp));
             }, cause -> {

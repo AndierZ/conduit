@@ -12,6 +12,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import static io.vertx.conduit.handlers.Constants.USER;
+
 
 @Entity("users")
 @Indexes({@Index(fields = { @Field("username") }, options = @IndexOptions(unique = true)),
@@ -26,7 +28,7 @@ public class User extends Base {
     }
 
     @NotEmpty
-    @Pattern(regexp="[a-zA-Z0-9]+")
+    @Pattern(regexp="[a-zA-Z0-9_]+")
     private String username;
 
     @NotEmpty
@@ -83,8 +85,8 @@ public class User extends Base {
 
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
-        super.toJson(json);
         UserConverter.toJson(this, json);
+        super.toJson(json);
         return json;
     }
 

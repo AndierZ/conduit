@@ -76,8 +76,8 @@ public class TestBase {
         user1 = new User(user1Json);
         user2 = new User(user2Json);
 
-        JsonObject article1Json = new JsonObject().put("title", "first article").put("slug", "first-article").put("description", "We have to test it out.").put("body", "Not much to say").put("comments", new JsonArray()).put("tagsList", new JsonArray().add("food").add("travel"));
-        JsonObject article2Json = new JsonObject().put("title", "second article").put("slug", "second-article").put("description", "Last article is really funny").put("body", "It's not over").put("comments", new JsonArray()).put("tagsList", new JsonArray().add("music").add("dance"));
+        JsonObject article1Json = new JsonObject().put("title", "first article").put("slug", "first-article").put("description", "We have to test it out.").put("body", "Not much to say").put("comments", new JsonArray()).put("tagList", new JsonArray().add("food").add("travel"));
+        JsonObject article2Json = new JsonObject().put("title", "second article").put("slug", "second-article").put("description", "Last article is really funny").put("body", "It's not over").put("comments", new JsonArray()).put("tagList", new JsonArray().add("music").add("dance"));
 
         testArticle1 = new Article(article1Json);
         testArticle2 = new Article(article2Json);
@@ -142,12 +142,11 @@ public class TestBase {
                         ), ar -> {
                     if (ar.succeeded()) {
                         tc.assertEquals(HttpResponseStatus.CREATED.code(), ar.result().statusCode());
-                        JsonObject returnedUser = ar.result().bodyAsJsonObject();
+                        JsonObject returnedUser = ar.result().bodyAsJsonObject().getJsonObject("user");
                         tc.assertEquals(user.getUsername(), returnedUser.getString("username"));
                         tc.assertEquals(user.getEmail(), returnedUser.getString("email"));
                         tc.assertEquals(user.getBio(), returnedUser.getString("bio"));
                         tc.assertNull(returnedUser.getString("image"));
-                        user.setId(user.getId());
                         create.complete();
                     } else {
                         tc.fail(ar.cause());
@@ -168,9 +167,9 @@ public class TestBase {
                         ar -> {
                             if (ar.succeeded()) {
                                 tc.assertEquals(HttpResponseStatus.CREATED.code(), ar.result().statusCode());
-                                JsonObject returnedUser = ar.result().bodyAsJsonObject();
-                                tc.assertNotNull(returnedUser.getString(Constants.AUTH_HEADER));
-                                tc.put("jwt", returnedUser.getString(Constants.AUTH_HEADER));
+                                JsonObject returnedUser = ar.result().bodyAsJsonObject().getJsonObject("user");
+                                tc.assertNotNull(returnedUser.getString(Constants.AUTH_KEY));
+                                tc.put("jwt", returnedUser.getString(Constants.AUTH_KEY));
                                 login.complete();
                             } else {
                                 tc.fail(ar.cause());
@@ -180,7 +179,7 @@ public class TestBase {
         login.awaitSuccess();
     }
 
-    protected void createArticle(TestContext tc, Article article) {
+    protected void createArticle(TestContext tc, User user, Article article) {
         Async createArticle = tc.async();
 
         // Must include the forward slash at the end
@@ -195,12 +194,13 @@ public class TestBase {
                         tc.assertEquals(HttpResponseStatus.CREATED.code(), ar.result().statusCode());
                         JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(Constants.ARTICLE);
                         tc.assertNotNull(json);
-                        JsonObject expected = article.toJsonFor(user1);
-                        expected.put("_id", json.getString("_id"));
-                        expected.put("createTime", json.getLong("createTime"));
+                        JsonObject expected = article.toJsonFor(user);
+                        expected.put("id", json.getString("id"));
+                        expected.put("createdAt", json.getString("createdAt"));
                         expected.put("createUser", json.getString("createUser"));
+                        expected.put("updatedAt", json.getString("updatedAt"));
                         tc.assertEquals(expected, json);
-                        article.setId(new ObjectId(json.getString("_id")));
+                        article.setId(new ObjectId(json.getString("id")));
                         createArticle.complete();
                     } else {
                         tc.fail();

@@ -7,6 +7,7 @@ import io.vertx.core.json.JsonObject;
 import org.bson.types.ObjectId;
 
 import javax.validation.constraints.NotNull;
+import java.util.Date;
 
 @DataObject(generateConverter = true)
 @Entity("comments")
@@ -54,8 +55,8 @@ public class Comment extends Base {
 
     public JsonObject toJson() {
         JsonObject json = new JsonObject();
-        super.toJson(json);
         CommentConverter.toJson(this, json);
+        super.toJson(json);
         json.put("article", article != null ? article.toHexString() : null);
         return json;
     }
@@ -69,6 +70,8 @@ public class Comment extends Base {
     public JsonObject toJsonFor(User user) {
         JsonObject json = toJson();
         json.put("author", author.toProfileJsonFor(user));
+        json.put("createdAt", DF.format(new Date(getCreatedAt())));
+        json.put("updatedAt", DF.format(new Date(getCreatedAt())));
         return json;
     }
 }

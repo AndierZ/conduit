@@ -20,13 +20,13 @@ public class ArticleTest extends TestBase {
         registerUser(tc, user1);
         loginUser(tc, user1);
 
-        createArticle(tc, testArticle1);
+        createArticle(tc, user1, testArticle1);
 
         Async updateArticle = tc.async();
 
         // Must include the forward slash at the end
 
-        webClient.post(PORT, "localhost", "/api/articles/first-article")
+        webClient.put(PORT, "localhost", "/api/articles/first-article")
                 .putHeader(CONTENT_TYPE, JSON)
                 .putHeader(AUTHORIZATION, getJwt(tc))
                 .sendJsonObject(new JsonObject()
@@ -37,12 +37,12 @@ public class ArticleTest extends TestBase {
                         JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(Constants.ARTICLE);
                         tc.assertNotNull(json);
                         JsonObject expected = testArticle1.toJsonFor(user1);
-                        expected.put("_id", json.getString("_id"));
+                        expected.put("id", json.getString("id"));
                         expected.put("version", json.getLong("version"));
                         expected.put("body", "updatedBody");
-                        expected.put("createTime", json.getLong("createTime"));
+                        expected.put("createdAt", json.getString("createdAt"));
                         expected.put("createUser", json.getString("createUser"));
-                        expected.put("updateTime", json.getLong("updateTime"));
+                        expected.put("updatedAt", json.getString("updatedAt"));
                         expected.put("updateUser", json.getString("updateUser"));
                         tc.assertEquals(expected, json);
                         updateArticle.complete();
@@ -64,14 +64,14 @@ public class ArticleTest extends TestBase {
                         JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(Constants.ARTICLE);
                         tc.assertNotNull(json);
                         JsonObject expected = testArticle1.toJsonFor(user1);
-                        expected.put("_id", json.getString("_id"));
+                        expected.put("id", json.getString("id"));
                         expected.put("version", json.getLong("version"));
                         expected.put("body", "updatedBody");
                         expected.put("favoritesCount", 1);
                         expected.put("favorited", true);
-                        expected.put("createTime", json.getLong("createTime"));
+                        expected.put("createdAt", json.getString("createdAt"));
                         expected.put("createUser", json.getString("createUser"));
-                        expected.put("updateTime", json.getLong("updateTime"));
+                        expected.put("updatedAt", json.getString("updatedAt"));
                         expected.put("updateUser", json.getString("updateUser"));
                         tc.assertEquals(expected, json);
                         favoriteArticle.complete();
@@ -93,14 +93,14 @@ public class ArticleTest extends TestBase {
                         JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(Constants.ARTICLE);
                         tc.assertNotNull(json);
                         JsonObject expected = testArticle1.toJsonFor(user1);
-                        expected.put("_id", json.getString("_id"));
+                        expected.put("id", json.getString("id"));
                         expected.put("version", json.getLong("version"));
                         expected.put("body", "updatedBody");
                         expected.put("favoritesCount", 0);
                         expected.put("favorited", false);
-                        expected.put("createTime", json.getLong("createTime"));
+                        expected.put("createdAt", json.getString("createdAt"));
                         expected.put("createUser", json.getString("createUser"));
-                        expected.put("updateTime", json.getLong("updateTime"));
+                        expected.put("updatedAt", json.getString("updatedAt"));
                         expected.put("updateUser", json.getString("updateUser"));
                         tc.assertEquals(expected, json);
                         unfavoriteArticle.complete();
@@ -122,7 +122,7 @@ public class ArticleTest extends TestBase {
                         tc.assertEquals(HttpResponseStatus.OK.code(), ar.result().statusCode());
                         JsonObject json = ar.result().bodyAsJsonObject().getJsonObject(Constants.COMMENT);
                         tc.assertNotNull(json);
-                        tc.put("commentId", json.getString("_id"));
+                        tc.put("commentId", json.getString("id"));
                         tc.assertEquals(testArticle1.getId().toHexString(), json.getString("article"));
                         tc.assertEquals(testArticle1.getAuthor().getUsername(), json.getJsonObject("author").getString("username"));
                         tc.assertEquals("a comment", json.getString("body"));

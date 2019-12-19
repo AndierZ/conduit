@@ -122,7 +122,7 @@ public class MorphiaServiceImpl implements MorphiaService {
     @Override
     public void queryTags(Handler<AsyncResult<List<String>>> resultHandler) {
         vertx.executeBlocking(future -> {
-            future.complete(datastore.getCollection(Article.class).distinct("tagsList"));
+            future.complete(datastore.getCollection(Article.class).distinct("tagList"));
         }, res -> {
             if (res.succeeded()) {
                 resultHandler.handle(Future.succeededFuture((List<String>)res.result()));
@@ -133,14 +133,14 @@ public class MorphiaServiceImpl implements MorphiaService {
     }
 
     @Override
-    public void queryArticles(JsonObject json, Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void queryArticles(User user, JsonObject json, Handler<AsyncResult<JsonObject>> resultHandler) {
         vertx.executeBlocking(future -> {
             FindOptions findOptions = new FindOptions()
                     .limit(json.getInteger("limit", 20))
                     .skip(json.getInteger("offset", 0));
 
             Query<Article> query = datastore.createQuery(Article.class);
-            query.order(Sort.descending("createTime"));
+            query.order(Sort.descending("createdAt"));
 
             if (json.getString("author") != null) {
                 Query<User> userQuery = datastore.createQuery(User.class);
@@ -157,18 +157,18 @@ public class MorphiaServiceImpl implements MorphiaService {
             }
 
             if (json.getJsonArray("tags") != null) {
-                List<Criteria> criteria = json.getJsonArray("tags").stream().map(tag -> query.criteria("tagsList").in(json.getJsonArray("tags"))).collect(Collectors.toList());
+                List<Criteria> criteria = json.getJsonArray("tags").stream().map(tag -> query.criteria("tagList").in(json.getJsonArray("tags"))).collect(Collectors.toList());
                 query.or(criteria.toArray(new Criteria[0]));
             }
 
             long count = query.count();
             List<Article> articles = query.find(findOptions).toList();
             JsonArray array = new JsonArray();
-            articles.forEach(article -> array.add(article.toJson()));
+            articles.forEach(article -> array.add(article.toJsonFor(user)));
 
             JsonObject res = new JsonObject();
 
-            res.put("count", count);
+            res.put("articlesCount", count);
             res.put("articles", array);
 
             future.complete(res);
@@ -182,7 +182,7 @@ public class MorphiaServiceImpl implements MorphiaService {
     }
 
     @Override
-    public void queryArticlesFeed(JsonObject json, Handler<AsyncResult<JsonObject>> resultHandler) {
+    public void queryArticlesFeed(User user, JsonObject json, Handler<AsyncResult<JsonObject>> resultHandler) {
         vertx.executeBlocking(future -> {
             FindOptions findOptions = new FindOptions()
                     .limit(json.getInteger("limit", 20))
@@ -190,7 +190,7 @@ public class MorphiaServiceImpl implements MorphiaService {
 
 
             Query<Article> query = datastore.createQuery(Article.class);
-            query.order(Sort.descending("createTime"));
+            query.order(Sort.descending("createdAt"));
 
             if (json.getString("queryingUser") != null) {
                 Query<User> userQuery = datastore.createQuery(User.class);
@@ -202,11 +202,11 @@ public class MorphiaServiceImpl implements MorphiaService {
             long count = query.count();
             List<Article> articles = query.find(findOptions).toList();
             JsonArray array = new JsonArray();
-            articles.forEach(article -> array.add(article.toJson()));
+            articles.forEach(article -> array.add(article.toJsonFor(user)));
 
             JsonObject res = new JsonObject();
 
-            res.put("count", count);
+            res.put("articlesCount", count);
             res.put("articles", array);
 
             future.complete(res);

@@ -50,6 +50,10 @@ public class ConduitHandler extends BaseHandler {
 
     @Middleware
     public void extractUser(RoutingContext event) {
+        if (event.get(Constants.USER_ID) == null) {
+            event.next();
+            return;
+        }
         userService.rxGetById(event.get(Constants.USER_ID))
                 .subscribe((user, ex) -> {
                     if (ex == null) {
@@ -108,7 +112,7 @@ public class ConduitHandler extends BaseHandler {
     }
 
     protected void setCreateFields(RoutingContext event, JsonObject jsonObject) {
-        jsonObject.put("createTime", System.currentTimeMillis());
+        jsonObject.put("createdAt", System.currentTimeMillis());
         User user = event.get(Constants.USER);
         if (user != null) {
             jsonObject.put("createUser", user.getUsername());
@@ -116,7 +120,7 @@ public class ConduitHandler extends BaseHandler {
     }
 
     protected void setUpdateFields(RoutingContext event, JsonObject jsonObject) {
-        jsonObject.put("updateTime", System.currentTimeMillis());
+        jsonObject.put("updatedAt", System.currentTimeMillis());
         User user = event.get(Constants.USER);
         if (user != null) {
             jsonObject.put("updateUser", user.getUsername());

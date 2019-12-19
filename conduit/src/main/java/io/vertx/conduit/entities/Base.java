@@ -6,20 +6,32 @@ import dev.morphia.annotations.Version;
 import io.vertx.core.json.JsonObject;
 import org.bson.types.ObjectId;
 
-import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Objects;
+import java.util.TimeZone;
 
 @Entity
 public abstract class Base implements Serializable {
+
+    public static DateFormat DF;
+    static {
+        TimeZone tz = TimeZone.getTimeZone("UTC");
+        DF = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
+        DF.setTimeZone(tz);
+    }
+
     @Id
     private ObjectId id;
 
     @Version
     private long version;
     private String createUser;
-    private long createTime;
-    private long updateTime;
+    private long createdAt;
+    private long updatedAt;
     private String updateUser;
     private boolean isRetired;
 
@@ -39,20 +51,20 @@ public abstract class Base implements Serializable {
         this.createUser = createUser;
     }
 
-    public long getCreateTime() {
-        return createTime;
+    public long getCreatedAt() {
+        return createdAt;
     }
 
-    public void setCreateTime(long createTime) {
-        this.createTime = createTime;
+    public void setCreatedAt(long createdAt) {
+        this.createdAt = createdAt;
     }
 
-    public long getUpdateTime() {
-        return updateTime;
+    public long getUpdatedAt() {
+        return updatedAt;
     }
 
-    public void setUpdateTime(long updateTime) {
-        this.updateTime = updateTime;
+    public void setUpdatedAt(long updatedAt) {
+        this.updatedAt = updatedAt;
     }
 
     public String getUpdateUser() {
@@ -72,13 +84,21 @@ public abstract class Base implements Serializable {
     }
 
     protected void toJson(JsonObject json) {
-        json.put("_id", id == null ? null : id.toHexString());
+        json.put("id", id == null ? null : id.toHexString());
+        json.put("createdAt", this.createdAt);
+        json.put("updatedAt", this.updatedAt);
     }
 
     protected void fromJson(JsonObject json) {
-        String id = json.getString("_id");
+        String id = json.getString("id");
         if (id != null) {
             this.id = new ObjectId(id);
+        }
+        if (json.getLong("createdAt") != null) {
+            this.createdAt = json.getLong("createdAt");
+        }
+        if (json.getLong("updatedAt") != null) {
+            this.updatedAt = json.getLong("updatedAt");
         }
     }
 
