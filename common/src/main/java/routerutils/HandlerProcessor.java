@@ -15,6 +15,11 @@ import java.lang.reflect.Modifier;
 import java.util.*;
 import java.util.stream.Collectors;
 
+/*
+ Inspired by greyseal's work
+ https://github.com/greyseal/vertx-realworld-example-app/blob/master/vertx-boot/src/main/java/com/greyseal/vertx/boot/annotation/AnnotationProcessor.java
+ */
+
 public final class HandlerProcessor {
 
     private static Logger LOGGER = ContextLogger.create();
