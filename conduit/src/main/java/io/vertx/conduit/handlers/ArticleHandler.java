@@ -5,6 +5,7 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.conduit.entities.Article;
 import io.vertx.conduit.entities.Comment;
 import io.vertx.conduit.entities.User;
+import io.vertx.conduit.services.MorphiaServiceOperator;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
 import io.vertx.core.json.Json;
@@ -138,7 +139,7 @@ public class ArticleHandler extends ConduitHandler {
                     .end(Json.encodePrettily(new JsonObject().put(Constants.ARTICLE, article.toJsonFor(user))));
             return;
         }
-        JsonObject update = new JsonObject().put("favorites", new JsonObject().put("$push", article.getSlug()));
+        JsonObject update = new JsonObject().put("favorites", new JsonObject().put(MorphiaServiceOperator.PUSH, article.getSlug()));
 
         userService.rxUpdate(user.getId().toHexString(), update)
                    .flatMap(ignored -> userService.rxGetFavoriteCount(article.getSlug()))
@@ -162,7 +163,7 @@ public class ArticleHandler extends ConduitHandler {
                     .end(Json.encodePrettily(article.toJsonFor(user)));
             return;
         }
-        JsonObject update = new JsonObject().put("favorites", new JsonObject().put("$pop", article.getSlug()));
+        JsonObject update = new JsonObject().put("favorites", new JsonObject().put(MorphiaServiceOperator.POP, article.getSlug()));
 
         userService.rxUpdate(user.getId().toHexString(), update)
                 .flatMap(ignored -> {
@@ -188,7 +189,7 @@ public class ArticleHandler extends ConduitHandler {
 
         commentService.rxCreate(message)
                       .map(comment -> {
-                          JsonObject update = new JsonObject().put("comments", new JsonObject().put("$push", new JsonObject().put("_id", comment.getId().toHexString())));
+                          JsonObject update = new JsonObject().put("comments", new JsonObject().put(MorphiaServiceOperator.PUSH, new JsonObject().put("_id", comment.getId().toHexString())));
                           // FIXME how can we avoid this?
                           articleService.rxUpdate(article.getSlug(), update).subscribe();
                           return comment;
@@ -221,7 +222,7 @@ public class ArticleHandler extends ConduitHandler {
         Comment comment = event.get(Constants.COMMENT);
 
         if (comment.getAuthor().getId().equals(user.getId())) {
-            JsonObject update = new JsonObject().put("comments", new JsonObject().put("$pop", new JsonObject().put("_id", comment.getId().toHexString())));
+            JsonObject update = new JsonObject().put("comments", new JsonObject().put(MorphiaServiceOperator.POP, new JsonObject().put("_id", comment.getId().toHexString())));
             articleService.rxUpdate(article.getSlug(), update)
                           .flatMap(ignored -> commentService.rxDelete(comment.getId().toHexString()))
                           .subscribe((ignored, ex) -> {

@@ -250,9 +250,9 @@ public class MorphiaServiceImpl implements MorphiaService {
                             }
                         }
 
-                        if ("$push".equals(operator)) {
+                        if (MorphiaServiceOperator.PUSH.equals(operator)) {
                             updateOperations.addToSet(field, value);
-                        } else if ("$pop".equals(operator)) {
+                        } else if (MorphiaServiceOperator.POP.equals(operator)) {
                             updateOperations.removeAll(field, value);
                         }
                     }

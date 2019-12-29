@@ -2,6 +2,7 @@ package io.vertx.conduit.handlers;
 
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.vertx.conduit.entities.User;
+import io.vertx.conduit.services.MorphiaServiceOperator;
 import io.vertx.conduit.services.UserService;
 import io.vertx.core.Vertx;
 import io.vertx.core.http.HttpMethod;
@@ -114,7 +115,7 @@ public class UserHandler extends ConduitHandler {
         queryingUser.follow(profileUser);
 
         // following is a list of dbrefs. probably this is not the right way to append to it
-        JsonObject update = new JsonObject().put("following", new JsonObject().put("$push", new JsonObject().put("_id", profileUser.getId().toHexString())));
+        JsonObject update = new JsonObject().put("following", new JsonObject().put(MorphiaServiceOperator.PUSH, new JsonObject().put("_id", profileUser.getId().toHexString())));
         userService.rxUpdate(queryingUser.getId().toHexString(), update)
                    .map(user -> new JsonObject().put("profile", profileUser.toProfileJsonFor(queryingUser)))
                    .subscribe(res -> handleResponse(event, res, HttpResponseStatus.OK), e -> handleError(event, e));
@@ -127,7 +128,7 @@ public class UserHandler extends ConduitHandler {
         User queryingUser = event.get(Constants.USER);
 
         queryingUser.unfollow(profileUser);
-        JsonObject update = new JsonObject().put("following", new JsonObject().put("$pop", new JsonObject().put("_id", profileUser.getId().toHexString())));
+        JsonObject update = new JsonObject().put("following", new JsonObject().put(MorphiaServiceOperator.POP, new JsonObject().put("_id", profileUser.getId().toHexString())));
         userService.rxUpdate(queryingUser.getId().toHexString(), update)
                 .map(user -> new JsonObject().put("profile", profileUser.toProfileJsonFor(queryingUser)))
                 .subscribe(res -> handleResponse(event, res, HttpResponseStatus.OK), e -> handleError(event, e));
