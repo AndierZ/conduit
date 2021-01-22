@@ -8,8 +8,8 @@
 - Install Robo 3T if you want to manually examine the values in the database
 - Compile and try running all the unit tests under `/vertx-examples/conduit/src/test/java/`
 - Run mongodb in terminal `mongod --config /usr/local/etc/mongod.conf --fork`
-- Gradle tasks -> application -> vertxRun to run the application
-- Run test the script from here `https://github.com/gothinkster/realworld/tree/master/api`
+- `Gradle tasks -> application -> vertxRun` to run the application
+- Run the test script from here `https://github.com/gothinkster/realworld/tree/master/api`
 
 # Application structure
 
