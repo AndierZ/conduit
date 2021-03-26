@@ -3,7 +3,7 @@
 - Clone the repo
 - Make sure you have Java1.8+ JDK installed
 - Open the project in your IDE and allow gradle to finish downloading all dependencies
-- A trick for Intellij, If you don't see your gradle menue refresh with new tasks and dependencies after it's done processing, try restarting your IDE
+- A trick for Intellij, If you don't see your gradle menu refresh with new tasks and dependencies after it's done processing, try restarting your IDE
 - Install Mongodb community version and launch it in the background
 - Install Robo 3T if you want to manually examine the values in the database
 - Compile and try running all the unit tests under `/vertx-examples/conduit/src/test/java/`
@@ -66,7 +66,7 @@
 - add custom jwt handler to expect "Token" instead of "Bearer"
 - Plow through the Postman test script from the realworld project page and make everything pass.
 
-# Afterthoughts
+# After thoughts
 
 - Wasn't a fan of how ObjectId works and the fact that it can be null
 - Certain join-like queries using morphia and mongodb is quite painful
